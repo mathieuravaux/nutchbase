@@ -110,11 +110,7 @@ public class OutlinkExtractor {
         }
         result = matcher.getMatch();
         url = result.group(0);
-        try {
-          outlinks.add(new Outlink(url, anchor));
-        } catch (MalformedURLException mue) {
-          LOG.warn("Invalid url: '" + url + "', skipping.");
-        }
+        outlinks.add(new Outlink(url, anchor));
       }
     } catch (Exception ex) {
       // if the matcher fails (perhaps a malformed URL) we just log it and move on

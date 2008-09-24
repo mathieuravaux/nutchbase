@@ -31,6 +31,7 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.conf.Configuration;
 
 import org.apache.nutch.metadata.Metadata;
+import org.apache.nutchbase.parse.ParseHbase;
 
 
 /**
@@ -199,6 +200,13 @@ public class ParseStatus implements Writable {
    */
   public Parse getEmptyParse(Configuration conf) {
     return new EmptyParseImpl(this, conf);
+  }
+  
+  /** A convenience method. Creates an empty ParseHbase instance,
+   * which returns this status.
+   */
+  public ParseHbase getEmptyParseHbase(Configuration conf) {
+    return new ParseHbase("", "", new Outlink[0], this);
   }
   
   /** A convenience method. Creates an empty ParseResult,

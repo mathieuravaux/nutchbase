@@ -30,12 +30,14 @@
      <ant dir="creativecommons" target="deploy"/>
      <ant dir="feed" target="deploy"/>
      <ant dir="index-basic" target="deploy"/>
+     <ant dir="index-basichbase" target="deploy"/>
      <ant dir="index-anchor" target="deploy"/>
      <ant dir="index-more" target="deploy"/>
   	 <ant dir="field-basic" target="deploy"/>
   	 <ant dir="field-boost" target="deploy"/>
      <ant dir="languageidentifier" target="deploy"/>
      <ant dir="lib-http" target="deploy"/>
+     <ant dir="lib-httphbase" target="deploy"/>
      <ant dir="lib-jakarta-poi" target="deploy"/>
      <ant dir="lib-lucene-analyzers" target="deploy"/>
      <ant dir="lib-nekohtml" target="deploy"/>
@@ -48,9 +50,11 @@
      <ant dir="protocol-file" target="deploy"/>
      <ant dir="protocol-ftp" target="deploy"/>
      <ant dir="protocol-http" target="deploy"/>
+     <ant dir="protocol-httphbase" target="deploy"/>
      <ant dir="protocol-httpclient" target="deploy"/>
      <ant dir="parse-ext" target="deploy"/>
      <ant dir="parse-html" target="deploy"/>
+     <ant dir="parse-htmlhbase" target="deploy"/>
      <ant dir="parse-js" target="deploy"/>
      <!-- <ant dir="parse-mp3" target="deploy"/> -->
      <ant dir="parse-msexcel" target="deploy"/>
@@ -133,6 +137,7 @@
     <ant dir="creativecommons" target="clean"/>
     <ant dir="feed" target="clean"/>
     <ant dir="index-basic" target="clean"/>
+    <ant dir="index-basichbase" target="clean"/>
     <ant dir="index-anchor" target="clean"/>
     <ant dir="index-more" target="clean"/>
     <ant dir="field-basic" target="clean"/>
@@ -140,6 +145,7 @@
     <ant dir="languageidentifier" target="clean"/>
     <ant dir="lib-commons-httpclient" target="clean"/>
     <ant dir="lib-http" target="clean"/>
+    <ant dir="lib-httphbase" target="clean"/>
     <ant dir="lib-jakarta-poi" target="clean"/>
     <ant dir="lib-lucene-analyzers" target="clean"/>
     <ant dir="lib-nekohtml" target="clean"/>
@@ -152,9 +158,11 @@
     <ant dir="protocol-file" target="clean"/>
     <ant dir="protocol-ftp" target="clean"/>
     <ant dir="protocol-http" target="clean"/>
+    <ant dir="protocol-httphbase" target="clean"/>
     <ant dir="protocol-httpclient" target="clean"/>
     <ant dir="parse-ext" target="clean"/>
     <ant dir="parse-html" target="clean"/>
+    <ant dir="parse-htmlhbase" target="clean"/>
     <ant dir="parse-js" target="clean"/>
     <ant dir="parse-mp3" target="clean"/>
     <ant dir="parse-msexcel" target="clean"/>

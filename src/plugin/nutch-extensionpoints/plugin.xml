@@ -37,8 +37,16 @@
       name="Nutch Indexing Filter"/>
 
 <extension-point
+      id="org.apache.nutchbase.indexer.IndexingFilterHbase"
+      name="Nutch Indexing Filter Hbase"/>
+
+<extension-point
       id="org.apache.nutch.ontology.Ontology"
       name="Ontology Model Loader"/>
+
+<extension-point
+      id="org.apache.nutchbase.parse.ParserHbase"
+      name="Nutch Content Parser Hbase"/>
 
 <extension-point
       id="org.apache.nutch.parse.Parser"
@@ -51,6 +59,10 @@
 <extension-point
       id="org.apache.nutch.protocol.Protocol"
       name="Nutch Protocol"/>
+
+<extension-point
+      id="org.apache.nutchbase.protocol.ProtocolHbase"
+      name="Nutch ProtocolHbase"/>
 
 <extension-point
       id="org.apache.nutch.searcher.QueryFilter"

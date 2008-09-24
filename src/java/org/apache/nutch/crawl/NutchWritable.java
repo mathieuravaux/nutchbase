@@ -47,7 +47,8 @@ public class NutchWritable extends GenericWritableConfigurable {
       org.apache.nutch.protocol.ProtocolStatus.class,
       org.apache.nutch.searcher.Hit.class,
       org.apache.nutch.searcher.HitDetails.class,
-      org.apache.nutch.searcher.Hits.class
+      org.apache.nutch.searcher.Hits.class,
+      org.apache.hadoop.hbase.io.RowResult.class
     };
   }
 
