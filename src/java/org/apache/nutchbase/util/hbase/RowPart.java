@@ -20,15 +20,18 @@ import org.apache.nutch.protocol.ProtocolStatus;
 
 public class RowPart extends ImmutableRowPart {
 
-  private Map<byte[], byte[]> opMap =
+  private final Map<byte[], byte[]> opMap =
     new TreeMap<byte[], byte[]>(Bytes.BYTES_COMPARATOR);
-  
-  public RowPart() { }
+
+  /** For Writable. Do not use directly. */
+  public RowPart() {
+    super();
+  }
 
   public RowPart(RowResult rowResult) {
     super(rowResult);
   }
-  
+
   public RowPart(byte[] rowId) {
     super(rowId);
   }
@@ -39,302 +42,331 @@ public class RowPart extends ImmutableRowPart {
       throw new IllegalArgumentException("Passed value cannot be null");
     }
   }
-  
+
   // TODO: waay too slow. Find a faster approach
   private void deleteColumnAll(String colStart) {
     // first clear new additions/deletions
-    Iterator<Map.Entry<byte[], byte[]>> it = opMap.entrySet().iterator();
+    final Iterator<Map.Entry<byte[], byte[]>> it = opMap.entrySet().iterator();
     while (it.hasNext()) {
-      byte[] key = it.next().getKey();
-      String keyString = Bytes.toString(key);
+      final byte[] key = it.next().getKey();
+      final String keyString = Bytes.toString(key);
       if (keyString.startsWith(colStart)) {
         it.remove();
       }
     }
-    
+
     // then add 'delete' operations for existing columns
-    for (byte[] col : rowResult.keySet()) {
-      String column = Bytes.toString(col);
+    for (final byte[] col : rowResult.keySet()) {
+      final String column = Bytes.toString(col);
       if (column.startsWith(colStart)) {
         opMap.put(col, null);
       }
     }
   }
-  
+
   @Override
   public String getBaseUrl() {
-    if (!opMap.containsKey(TableColumns.BASE_URL))
+    if (!opMap.containsKey(BASE_URL))
       return super.getBaseUrl();
-    
-    return Bytes.toString(opMap.get(TableColumns.BASE_URL));
+
+    return Bytes.toString(opMap.get(BASE_URL));
   }
-  
+
   public void setBaseUrl(String baseUrl) {
     checkForNull(baseUrl);
-    opMap.put(TableColumns.BASE_URL, Bytes.toBytes(baseUrl));
+    opMap.put(BASE_URL, Bytes.toBytes(baseUrl));
   }
 
   @Override
   public byte[] getContent() {
-    if (!opMap.containsKey(TableColumns.CONTENT))
+    if (!opMap.containsKey(CONTENT))
       return super.getContent();
-    
-    return opMap.get(TableColumns.BASE_URL);
+
+    return opMap.get(CONTENT);
   }
-  
+
   public void setContent(byte[] content) {
     checkForNull(content);
-    opMap.put(TableColumns.CONTENT, content);
+    opMap.put(CONTENT, content);
   }
 
   @Override
   public String getContentType() {
-    if (!opMap.containsKey(TableColumns.CONTENT_TYPE))
+    if (!opMap.containsKey(CONTENT_TYPE))
       return super.getContentType();
-    
-    return Bytes.toString(opMap.get(TableColumns.CONTENT_TYPE));
+
+    return Bytes.toString(opMap.get(CONTENT_TYPE));
   }
-  
+
   public void setContentType(String contentType) {
     checkForNull(contentType);
-    opMap.put(TableColumns.CONTENT_TYPE, Bytes.toBytes(contentType));
+    opMap.put(CONTENT_TYPE, Bytes.toBytes(contentType));
   }
 
   @Override
   public int getFetchInterval() {
-    if (!opMap.containsKey(TableColumns.FETCH_INTERVAL))
+    if (!opMap.containsKey(FETCH_INTERVAL))
       return super.getFetchInterval();
- 
-    return Bytes.toInt(opMap.get(TableColumns.FETCH_INTERVAL)); 
+
+    return Bytes.toInt(opMap.get(FETCH_INTERVAL));
   }
-  
+
   public void setFetchInterval(int fetchInterval) {
-    opMap.put(TableColumns.FETCH_INTERVAL, Bytes.toBytes(fetchInterval));
+    opMap.put(FETCH_INTERVAL, Bytes.toBytes(fetchInterval));
   }
 
   @Override
   public long getFetchTime() {
-    if (!opMap.containsKey(TableColumns.FETCH_TIME))
+    if (!opMap.containsKey(FETCH_TIME))
       return super.getFetchTime();
-    
-    return Bytes.toLong(opMap.get(TableColumns.FETCH_TIME));
+
+    return Bytes.toLong(opMap.get(FETCH_TIME));
   }
-  
+
   public void setFetchTime(long fetchTime) {
-    opMap.put(TableColumns.FETCH_TIME, Bytes.toBytes(fetchTime));
+    opMap.put(FETCH_TIME, Bytes.toBytes(fetchTime));
+  }
+
+
+  @Override
+  public long getPrevFetchTime() {
+    if (!opMap.containsKey(PREV_FETCH_TIME))
+      return super.getPrevFetchTime();
+
+    final byte[] val = opMap.get(PREV_FETCH_TIME);
+    if (val == null)
+      return -1L;
+    return Bytes.toLong(opMap.get(PREV_FETCH_TIME));
+  }
+
+  public void setPrevFetchTime(long prevFetchTime) {
+    opMap.put(PREV_FETCH_TIME, Bytes.toBytes(prevFetchTime));
   }
 
   @Override
-  public Collection<Outlink> getOutlinks() {    
-    Collection<Outlink> outlinks = super.getOutlinks();
-    Map<String, Outlink> linkMap = new HashMap<String, Outlink>();
-    
-    for (Outlink outlink : outlinks) {
+  public Collection<Outlink> getOutlinks() {
+    final Collection<Outlink> outlinks = super.getOutlinks();
+    final Map<String, Outlink> linkMap = new HashMap<String, Outlink>();
+
+    for (final Outlink outlink : outlinks) {
       linkMap.put(outlink.getToUrl(), outlink);
     }
-    
-    for (Map.Entry<byte[], byte[]> entry : opMap.entrySet()) {
-      String key = Bytes.toString(entry.getKey());
-      if (key.startsWith(TableColumns.OUTLINKS_STR)) {
-        byte[] val = entry.getValue();
+
+    for (final Map.Entry<byte[], byte[]> entry : opMap.entrySet()) {
+      final String key = Bytes.toString(entry.getKey());
+      if (key.startsWith(OUTLINKS_STR)) {
+        final byte[] val = entry.getValue();
         if (val == null) { // outlink deleted
           linkMap.remove(key);
         } else { // new outlink
-          String toUrl = key.substring(OUTLINKS_STR_LEN);
-          String anchor = Bytes.toString(val);
+          final String toUrl = key.substring(OUTLINKS_STR_LEN);
+          final String anchor = Bytes.toString(val);
           linkMap.put(key, new Outlink(toUrl, anchor));
         }
       }
     }
     return linkMap.values();
   }
-  
+
   public void addOutlink(Outlink outlink) {
-    byte[] key = Bytes.toBytes(TableColumns.OUTLINKS_STR + outlink.getToUrl());
+    final byte[] key = Bytes.toBytes(OUTLINKS_STR + outlink.getToUrl());
     opMap.put(key, Bytes.toBytes(outlink.getAnchor()));
   }
-  
+
   public void deleteAllOutlinks() {
-    deleteColumnAll(TableColumns.OUTLINKS_STR);
+    deleteColumnAll(OUTLINKS_STR);
   }
-  
+
   @Override
   public Collection<Inlink> getInlinks() {
-    Collection<Inlink> inlinks = super.getInlinks();
-    Map<String, Inlink> linkMap = new HashMap<String, Inlink>();
-    
-    for (Inlink inlink : inlinks) {
+    final Collection<Inlink> inlinks = super.getInlinks();
+    final Map<String, Inlink> linkMap = new HashMap<String, Inlink>();
+
+    for (final Inlink inlink : inlinks) {
       linkMap.put(inlink.getFromUrl(), inlink);
     }
 
-    for (Map.Entry<byte[], byte[]> entry : opMap.entrySet()) {
-      String key = Bytes.toString(entry.getKey());
-      if (key.startsWith(TableColumns.INLINKS_STR)) {
-        byte[] val = entry.getValue();
+    for (final Map.Entry<byte[], byte[]> entry : opMap.entrySet()) {
+      final String key = Bytes.toString(entry.getKey());
+      if (key.startsWith(INLINKS_STR)) {
+        final byte[] val = entry.getValue();
         if (val == null) { // inlink deleted
           linkMap.remove(key);
         } else { // new outlink
-          String fromUrl = key.substring(INLINKS_STR_LEN);
-          String anchor = Bytes.toString(val);
+          final String fromUrl = key.substring(INLINKS_STR_LEN);
+          final String anchor = Bytes.toString(val);
           linkMap.put(key, new Inlink(fromUrl, anchor));
         }
       }
     }
     return linkMap.values();
   }
-  
+
   public void addInlink(Inlink inlink) {
     checkForNull(inlink);
-    String fullKey = TableColumns.INLINKS_STR + inlink.getFromUrl();
+    final String fullKey = INLINKS_STR + inlink.getFromUrl();
     opMap.put(Bytes.toBytes(fullKey), Bytes.toBytes(inlink.getAnchor()));
   }
-  
+
   public void deleteAllInlinks() {
-    deleteColumnAll(TableColumns.INLINKS_STR);
+    deleteColumnAll(INLINKS_STR);
   }
 
   @Override
   public ParseStatus getParseStatus() {
-    if (!opMap.containsKey(TableColumns.PARSE_STATUS))
+    if (!opMap.containsKey(PARSE_STATUS))
       return super.getParseStatus();
-    
-    ParseStatus parseStatus = new ParseStatus();
+
+    final ParseStatus parseStatus = new ParseStatus();
     try {
-      return (ParseStatus) Writables.getWritable(opMap.get(TableColumns.PARSE_STATUS),
+      return (ParseStatus) Writables.getWritable(opMap.get(PARSE_STATUS),
                                                  parseStatus);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException(e); // TODO: really?
     }
   }
-  
+
   public void setParseStatus(ParseStatus parseStatus) {
     checkForNull(parseStatus);
     try {
-      opMap.put(TableColumns.PARSE_STATUS, Writables.getBytes(parseStatus));
-    } catch (IOException e) {
+      opMap.put(PARSE_STATUS, Writables.getBytes(parseStatus));
+    } catch (final IOException e) {
       throw new RuntimeException(e); // TODO: really?
     }
   }
 
   @Override
   public String getReprUrl() {
-    if (!opMap.containsKey(TableColumns.REPR_URL))
+    if (!opMap.containsKey(REPR_URL))
       return super.getReprUrl();
-    
-    return Bytes.toString(opMap.get(TableColumns.REPR_URL));
+
+    return Bytes.toString(opMap.get(REPR_URL));
   }
-  
+
   public void setReprUrl(String reprUrl) {
     checkForNull(reprUrl);
-    opMap.put(TableColumns.REPR_URL, Bytes.toBytes(reprUrl));
+    opMap.put(REPR_URL, Bytes.toBytes(reprUrl));
   }
 
   @Override
   public int getRetriesSinceFetch() {
-    if (!opMap.containsKey(TableColumns.RETRIES))
+    if (!opMap.containsKey(RETRIES))
       return super.getRetriesSinceFetch();
-    
-    return Bytes.toInt(opMap.get(TableColumns.RETRIES));
+
+    return Bytes.toInt(opMap.get(RETRIES));
   }
-  
+
   public void setRetriesSinceFetch(int retries) {
-    opMap.put(TableColumns.RETRIES, Bytes.toBytes(retries));
+    opMap.put(RETRIES, Bytes.toBytes(retries));
   }
-  
+
   @Override
   public ProtocolStatus getProtocolStatus() {
-    if (!opMap.containsKey(TableColumns.PROTOCOL_STATUS))
+    if (!opMap.containsKey(PROTOCOL_STATUS))
       return super.getProtocolStatus();
 
-    ProtocolStatus protocolStatus = new ProtocolStatus();
-    byte[] val = opMap.get(TableColumns.PROTOCOL_STATUS);
+    final ProtocolStatus protocolStatus = new ProtocolStatus();
+    final byte[] val = opMap.get(PROTOCOL_STATUS);
     try {
       return (ProtocolStatus) Writables.getWritable(val, protocolStatus);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
-  
+
   public void setProtocolStatus(ProtocolStatus protocolStatus) {
     checkForNull(protocolStatus);
     try {
-      opMap.put(TableColumns.PROTOCOL_STATUS,
+      opMap.put(PROTOCOL_STATUS,
                 Writables.getBytes(protocolStatus));
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
   public float getScore() {
-    if (!opMap.containsKey(TableColumns.SCORE))
+    if (!opMap.containsKey(SCORE))
       return super.getScore();
-    
-    return TableUtil.toFloat(opMap.get(TableColumns.SCORE));
+
+    return TableUtil.toFloat(opMap.get(SCORE));
   }
-  
+
   public void setScore(float score) {
-    opMap.put(TableColumns.SCORE, TableUtil.toBytes(score));
+    opMap.put(SCORE, TableUtil.toBytes(score));
   }
 
   @Override
   public byte getStatus() {
-    if (!opMap.containsKey(TableColumns.STATUS))
+    if (!opMap.containsKey(STATUS))
       return super.getStatus();
-    
-    return opMap.get(TableColumns.STATUS)[0];
+
+    return opMap.get(STATUS)[0];
   }
-  
+
   public void setStatus(byte status) {
-    opMap.put(TableColumns.STATUS, new byte[] { status });
+    opMap.put(STATUS, new byte[] { status });
   }
-  
+
   @Override
   public byte[] getSignature() {
-    if (!opMap.containsKey(TableColumns.SIGNATURE))
+    if (!opMap.containsKey(SIGNATURE))
       return super.getSignature();
-    
-    return opMap.get(TableColumns.SIGNATURE);
+
+    return opMap.get(SIGNATURE);
   }
-  
+
   public void setSignature(byte[] signature) {
     checkForNull(signature);
-    opMap.put(TableColumns.SIGNATURE, signature);
+    opMap.put(SIGNATURE, signature);
   }
-  
+
+  @Override
+  public byte[] getPrevSignature() {
+    if (!opMap.containsKey(PREV_SIGNATURE))
+      return super.getPrevSignature();
+
+    return opMap.get(PREV_SIGNATURE);
+  }
+
+  public void setPrevSignature(byte[] prevSig) {
+    checkForNull(prevSig);
+    opMap.put(PREV_SIGNATURE, prevSig);
+  }
+
   @Override
   public long getModifiedTime() {
-    return Bytes.toLong(opMap.get(TableColumns.MODIFIED_TIME));
+    return Bytes.toLong(opMap.get(MODIFIED_TIME));
   }
 
   public void setModifiedTime(long modifiedTime) {
-    opMap.put(TableColumns.MODIFIED_TIME, Bytes.toBytes(modifiedTime));
+    opMap.put(MODIFIED_TIME, Bytes.toBytes(modifiedTime));
   }
-  
+
   @Override
   public String getText() {
-    if (!opMap.containsKey(TableColumns.TEXT))
+    if (!opMap.containsKey(TEXT))
       return super.getText();
-    
-    return Bytes.toString(opMap.get(TableColumns.TEXT));
+
+    return Bytes.toString(opMap.get(TEXT));
   }
-    
+
   public void setText(String text) {
     checkForNull(text);
-    opMap.put(TableColumns.TEXT, Bytes.toBytes(text));
+    opMap.put(TEXT, Bytes.toBytes(text));
   }
-  
+
   @Override
   public String getTitle() {
-    if (!opMap.containsKey(TableColumns.TITLE))
+    if (!opMap.containsKey(TITLE))
       return super.getText();
-    
-    return Bytes.toString(opMap.get(TableColumns.TITLE));
+
+    return Bytes.toString(opMap.get(TITLE));
   }
-  
+
   public void setTitle(String title) {
     checkForNull(title);
-    opMap.put(TableColumns.TITLE, Bytes.toBytes(title));
+    opMap.put(TITLE, Bytes.toBytes(title));
   }
 
   @Override
@@ -347,40 +379,69 @@ public class RowPart extends ImmutableRowPart {
 
   @Override
   public boolean hasMeta(String metaKey) {
-    return hasColumn(Bytes.toBytes(TableColumns.METADATA_STR + metaKey));
+    return hasColumn(Bytes.toBytes(METADATA_STR + metaKey));
   }
-  
+
+  @Override
+  public String getHeader(String key) {
+    final byte[] headerKey = Bytes.toBytes(HEADERS_STR  + key);
+    if (opMap.containsKey(headerKey)) {
+      final byte[] val = opMap.get(headerKey);
+      if (val == null) { // deleted !!!
+        return null;
+      }
+      return Bytes.toString(val);
+    }
+    return stringify(rowResult.get(headerKey));
+  }
+
+  public void addHeader(String key, String value) {
+    checkForNull(value);
+    opMap.put(Bytes.toBytes(HEADERS_STR + key),
+              Bytes.toBytes(value));
+  }
+
+  public void deleteHeaders() {
+    deleteColumnAll(HEADERS_STR);
+  }
+
   @Override
   public byte[] getMeta(String metaKey) {
-    String fullKeyString = TableColumns.METADATA_STR + metaKey;
-    byte[] key = Bytes.toBytes(fullKeyString);
+    final String fullKeyString = METADATA_STR + metaKey;
+    final byte[] key = Bytes.toBytes(fullKeyString);
     if (!opMap.containsKey(key))
-      return rowResult.get(key).getValue();
-    
+      return super.get(key);
+
     return opMap.get(key);
   }
-  
+
+  @Override
+  public String getMetaAsString(String metaKey) {
+    final byte[] val = getMeta(metaKey);
+    return val == null ? null : Bytes.toString(val);
+  }
+
   public void putMeta(String metaKey, byte[] val) {
     checkForNull(val);
-    opMap.put(Bytes.toBytes(TableColumns.METADATA_STR + metaKey), val);
+    opMap.put(Bytes.toBytes(METADATA_STR + metaKey), val);
   }
-  
+
   public void deleteMeta(String metaKey) {
-    opMap.put(Bytes.toBytes(TableColumns.METADATA_STR + metaKey), null);
+    opMap.put(Bytes.toBytes(METADATA_STR + metaKey), null);
   }
-  
-  public BatchUpdate makeBatchUpdate(byte[] row) {
-    BatchUpdate bu = new BatchUpdate(row);
-    
-    for (Map.Entry<byte[], byte[]> entry : opMap.entrySet()) {
-      byte[] val = entry.getValue();
+
+  public BatchUpdate makeBatchUpdate() {
+    final BatchUpdate bu = new BatchUpdate(getRowId(), System.currentTimeMillis());
+
+    for (final Map.Entry<byte[], byte[]> entry : opMap.entrySet()) {
+      final byte[] val = entry.getValue();
       if (val == null) { // delete op
         bu.delete(entry.getKey());
       } else { // put op
         bu.put(entry.getKey(), val);
       }
     }
-    
+
     return bu;
   }
 
@@ -388,15 +449,15 @@ public class RowPart extends ImmutableRowPart {
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);
     opMap.clear();
-    int size = in.readInt();
+    final int size = in.readInt();
     for (int i = 0; i < size; i++) {
-      byte[] key = Bytes.readByteArray(in);
-      
+      final byte[] key = Bytes.readByteArray(in);
+
       byte[] val = null;
       if (in.readBoolean()) {
         val = Bytes.readByteArray(in);
       }
-      
+
       opMap.put(key, val);
     }
   }
@@ -405,10 +466,10 @@ public class RowPart extends ImmutableRowPart {
   public void write(DataOutput out) throws IOException {
     super.write(out);
     out.writeInt(opMap.size());
-    for (Map.Entry<byte[], byte[]> op : opMap.entrySet()) {
+    for (final Map.Entry<byte[], byte[]> op : opMap.entrySet()) {
       Bytes.writeByteArray(out, op.getKey());
-      
-      byte[] val = op.getValue();
+
+      final byte[] val = op.getValue();
       if (val == null) { // a delete operation
         out.writeBoolean(false);
       } else { // a put operation

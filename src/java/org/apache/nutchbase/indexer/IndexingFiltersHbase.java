@@ -26,12 +26,12 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.lucene.document.Document;
-
 import org.apache.nutch.plugin.*;
 import org.apache.nutch.util.ObjectCache;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.nutch.indexer.IndexingException;
+import org.apache.nutch.indexer.IndexingFilter;
+import org.apache.nutch.indexer.NutchDocument;
 import org.apache.nutchbase.util.hbase.ImmutableRowPart;
 
 /** Creates and caches {@link IndexingFilter} implementing plugins.*/
@@ -72,6 +72,7 @@ public class IndexingFiltersHbase {
               .getExtensionInstance();
           LOG.info("Adding " + filter.getClass().getName());
           if (!filterMap.containsKey(filter.getClass().getName())) {
+            filter.addIndexBackendOptions(conf);
             filterMap.put(filter.getClass().getName(), filter);
           }
         }
@@ -89,6 +90,7 @@ public class IndexingFiltersHbase {
           for (int i = 0; i < orderedFilters.length; i++) {
             IndexingFilterHbase filter = filterMap.get(orderedFilters[i]);
             if (filter != null) {
+              filter.addIndexBackendOptions(conf);
               filters.add(filter);
             }
           }
@@ -101,10 +103,9 @@ public class IndexingFiltersHbase {
       this.indexingFilters = (IndexingFilterHbase[]) objectCache
           .getObject(IndexingFilterHbase.class.getName());
     }
-  }                  
-
+  }  
   /** Run all defined filters. */
-  public Document filter(Document doc, String url, ImmutableRowPart row)
+  public NutchDocument filter(NutchDocument doc, String url, ImmutableRowPart row)
   throws IndexingException {
     for (IndexingFilterHbase indexingFilter : indexingFilters) {
       doc = indexingFilter.filter(doc, url, row);

@@ -18,19 +18,18 @@
 package org.apache.nutchbase.protocol;
 
 // Hadoop imports
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configurable;
 
 // Nutch imports
-import org.apache.nutch.plugin.Pluggable;
 import org.apache.nutch.protocol.ProtocolOutput;
 import org.apache.nutch.protocol.RobotRules;
+import org.apache.nutchbase.plugin.PluggableHbase;
 import org.apache.nutchbase.util.hbase.ImmutableRowPart;
 import org.apache.nutchbase.util.hbase.RowPart;
 
 /** A retriever of url content.  Implemented by protocol extensions. */
-public interface ProtocolHbase extends Pluggable, Configurable {
+public interface ProtocolHbase extends PluggableHbase, Configurable {
   /** The name of the extension point. */
   public final static String X_POINT_ID = ProtocolHbase.class.getName();
   
@@ -62,7 +61,5 @@ public interface ProtocolHbase extends Pluggable, Configurable {
    * @param row Row
    * @return robot rules (specific for this url or default), never null
    */
-  RobotRules getRobotRules(String url, ImmutableRowPart row);
-  
-  Set<String> getColumnSet();
+  RobotRules getRobotRules(String url, ImmutableRowPart row);  
 }

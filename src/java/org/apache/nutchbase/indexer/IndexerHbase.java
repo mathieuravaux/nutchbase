@@ -12,20 +12,22 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.io.RowResult;
 import org.apache.hadoop.hbase.mapred.TableMap;
+import org.apache.hadoop.hbase.mapred.TableMapReduceUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.nutch.indexer.Indexer;
+import org.apache.nutch.indexer.IndexerOutputFormat;
 import org.apache.nutch.indexer.IndexingException;
-import org.apache.nutch.indexer.Indexer.LuceneDocumentWrapper;
+import org.apache.nutch.indexer.NutchDocument;
+import org.apache.nutch.indexer.NutchIndexWriterFactory;
+import org.apache.nutch.indexer.lucene.LuceneWriter;
 import org.apache.nutch.parse.ParseStatus;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.NutchJob;
@@ -35,9 +37,10 @@ import org.apache.nutchbase.util.hbase.TableColumns;
 import org.apache.nutchbase.util.hbase.TableUtil;
 
 public class IndexerHbase 
-extends TableMap<ImmutableBytesWritable, ImmutableRowPart>
-implements Tool, Reducer<ImmutableBytesWritable, ImmutableRowPart,
-                         ImmutableBytesWritable, LuceneDocumentWrapper>{
+extends MapReduceBase
+implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
+                  Reducer<ImmutableBytesWritable, ImmutableRowPart,
+                          ImmutableBytesWritable, NutchDocument>{
 
 
   public static final Log LOG = LogFactory.getLog(IndexerHbase.class);
@@ -66,7 +69,6 @@ implements Tool, Reducer<ImmutableBytesWritable, ImmutableRowPart,
     filters = new IndexingFiltersHbase(job);
   }
   
-  @Override
   public void map(ImmutableBytesWritable key, RowResult rowResult,
       OutputCollector<ImmutableBytesWritable, ImmutableRowPart> output, 
       Reporter reporter)
@@ -88,14 +90,13 @@ implements Tool, Reducer<ImmutableBytesWritable, ImmutableRowPart,
   
   public void reduce(ImmutableBytesWritable key,
       Iterator<ImmutableRowPart> values,
-      OutputCollector<ImmutableBytesWritable, LuceneDocumentWrapper> output,
+      OutputCollector<ImmutableBytesWritable, NutchDocument> output,
       Reporter reporter) throws IOException {
 
     ImmutableRowPart row = values.next();
-    Document doc = new Document();
+    NutchDocument doc = new NutchDocument();
     
-    doc.add(new Field("digest", StringUtil.toHexString(row.getSignature()), 
-                      Field.Store.YES, Field.Index.NO));
+    doc.add("digest", StringUtil.toHexString(row.getSignature()));
     
     String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
     try {
@@ -110,12 +111,11 @@ implements Tool, Reducer<ImmutableBytesWritable, ImmutableRowPart,
     
     float boost = row.getScore();
     
-    doc.setBoost(boost);
+    doc.setScore(boost);
     // store boost for use by explain and dedup
-    doc.add(new Field("boost", Float.toString(boost),
-            Field.Store.YES, Field.Index.NO));
+    doc.add("boost", Float.toString(boost));
     
-    output.collect(key, new LuceneDocumentWrapper(doc));
+    output.collect(key, doc);
   }
   
   private Set<String> getColumnSet(JobConf job) {
@@ -131,13 +131,20 @@ implements Tool, Reducer<ImmutableBytesWritable, ImmutableRowPart,
     
     JobConf job = new NutchJob(getConf());
     job.setJobName("index " + table);
-    TableMap.initJob(table, TableUtil.getColumns(getColumnSet(job)), 
-                           IndexerHbase.class, ImmutableBytesWritable.class, 
-                           ImmutableRowPart.class, job);
-    
+    TableMapReduceUtil.initTableMapJob(table,
+        TableUtil.getColumns(getColumnSet(job)),
+        IndexerHbase.class, ImmutableBytesWritable.class,
+        ImmutableRowPart.class, job);
+
     job.setReducerClass(IndexerHbase.class);
     FileOutputFormat.setOutputPath(job, indexDir);
-    job.setOutputFormat(Indexer.OutputFormat.class);
+    job.setOutputFormat(IndexerOutputFormat.class);
+    
+    LuceneWriter.addFieldOptions("segment", LuceneWriter.STORE.YES, LuceneWriter.INDEX.NO, job);
+    LuceneWriter.addFieldOptions("digest", LuceneWriter.STORE.YES, LuceneWriter.INDEX.NO, job);
+    LuceneWriter.addFieldOptions("boost", LuceneWriter.STORE.YES, LuceneWriter.INDEX.NO, job);
+    
+    NutchIndexWriterFactory.addClassToConf(job, LuceneWriter.class);
     
     JobClient.runJob(job);
     

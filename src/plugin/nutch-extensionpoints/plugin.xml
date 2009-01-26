@@ -57,6 +57,10 @@
       name="HTML Parse Filter"/>
 
 <extension-point
+      id="org.apache.nutchbase.parse.HtmlParseFilterHbase"
+      name="HTML Parse Filter Hbase"/>
+
+<extension-point
       id="org.apache.nutch.protocol.Protocol"
       name="Nutch Protocol"/>
 

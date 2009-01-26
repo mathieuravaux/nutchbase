@@ -26,7 +26,6 @@ import org.apache.nutch.net.URLFilters;
 import org.apache.nutch.net.URLNormalizers;
 import org.apache.nutch.parse.Outlink;
 import org.apache.nutch.parse.ParseStatus;
-import org.apache.nutch.parse.Parser;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.NutchJob;
 import org.apache.nutch.util.URLUtil;
@@ -43,7 +42,7 @@ public class ParseTable
 extends TableMapReduce<ImmutableBytesWritable, RowPart>
 implements Tool {
 
-  public static final Log LOG = LogFactory.getLog(Parser.class);
+  public static final Log LOG = LogFactory.getLog(ParseTable.class);
 
   public static final String TMP_UPDATE_MARK = "__tmp_update_mark__";
 
@@ -53,6 +52,7 @@ implements Tool {
     COLUMNS.add(TableColumns.STATUS_STR);
     COLUMNS.add(TableColumns.CONTENT_STR);
     COLUMNS.add(TableColumns.CONTENT_TYPE_STR);
+    COLUMNS.add(TableColumns.SIGNATURE_STR);
     COLUMNS.add(TableColumns.METADATA_STR + FetcherHbase.TMP_PARSE_MARK);
   }
 
@@ -71,7 +71,7 @@ implements Tool {
     sig = SignatureFactoryHbase.getSignature(job);
     filters = new URLFilters(job);
     normalizers = new URLNormalizers(job, URLNormalizers.SCOPE_OUTLINK);
-    int maxOutlinksPerPage = job.getInt("db.max.outlinks.per.page", 100);
+    final int maxOutlinksPerPage = job.getInt("db.max.outlinks.per.page", 100);
     maxOutlinks = (maxOutlinksPerPage < 0) ? Integer.MAX_VALUE
                                            : maxOutlinksPerPage;
     ignoreExternalLinks = job.getBoolean("db.ignore.external.links", false);
@@ -83,17 +83,17 @@ implements Tool {
       OutputCollector<ImmutableBytesWritable, RowPart> output,
       Reporter reporter)
   throws IOException {
-    RowPart row = new RowPart(rowResult);
-    String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
+    final RowPart row = new RowPart(rowResult);
+    final String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
 
     if (!row.hasMeta(FetcherHbase.TMP_PARSE_MARK)) {
       return;
     }
 
-    byte status = row.getStatus();
+    final byte status = row.getStatus();
     if (status != CrawlDatumHbase.STATUS_FETCHED) {
       if (LOG.isDebugEnabled()) {
-        LOG.debug("Skipping " + url + " as status: " + 
+        LOG.debug("Skipping " + url + " as status: " +
             CrawlDatumHbase.getName(status));
       }
       return;
@@ -102,51 +102,55 @@ implements Tool {
     ParseHbase parse;
     try {
       parse = parseUtil.parse(url, row);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       LOG.warn("Error parsing: " + key + ": " + StringUtils.stringifyException(e));
       return;
     }
 
-    byte[] signature = sig.calculate(row, parse);
+    final byte[] signature = sig.calculate(row, parse);
 
-    ParseStatus pstatus = parse.getParseStatus();
+    final ParseStatus pstatus = parse.getParseStatus();
     row.setParseStatus(pstatus);
     if (pstatus.isSuccess()) {
       if (pstatus.getMinorCode() == ParseStatus.SUCCESS_REDIRECT) {
         String newUrl = pstatus.getMessage();
-        int refreshTime = Integer.parseInt(pstatus.getArgs()[1]);
+        final int refreshTime = Integer.parseInt(pstatus.getArgs()[1]);
         newUrl = normalizers.normalize(newUrl,
                                        URLNormalizers.SCOPE_FETCHER);
         try {
           newUrl = filters.filter(newUrl);
           if (newUrl == null || newUrl.equals(url)) {
-            String reprUrl = URLUtil.chooseRepr(url, newUrl,
+            final String reprUrl = URLUtil.chooseRepr(url, newUrl,
                                  refreshTime < Fetcher.PERM_REFRESH_TIME);
-            String reversedUrl = TableUtil.reverseUrl(reprUrl);
-            ImmutableBytesWritable newKey =
+            final String reversedUrl = TableUtil.reverseUrl(reprUrl);
+            final ImmutableBytesWritable newKey =
               new ImmutableBytesWritable(reversedUrl.getBytes());
-            RowPart newRow = new RowPart(newKey.get());
+            final RowPart newRow = new RowPart(newKey.get());
             if (!reprUrl.equals(url)) {
               newRow.setReprUrl(reprUrl);
             }
             newRow.putMeta(FetcherHbase.REDIRECT_DISCOVERED, TableUtil.YES_VAL);
             output.collect(newKey, newRow);
           }
-        } catch (Exception e) {
+        } catch (final Exception e) {
           // ignore
         }
       } else {
         row.setText(parse.getText());
         row.setTitle(parse.getTitle());
+        final byte[] prevSig = row.getSignature();
+        if (prevSig != null) {
+          row.setPrevSignature(prevSig);
+        }
         row.setSignature(signature);
         row.deleteAllOutlinks();
-        Outlink[] outlinks = parse.getOutlinks();
-        int count = 0;
+        final Outlink[] outlinks = parse.getOutlinks();
+        final int count = 0;
         String fromHost;
         if (ignoreExternalLinks) {
           try {
             fromHost = new URL(url).getHost().toLowerCase();
-          } catch (MalformedURLException e) {
+          } catch (final MalformedURLException e) {
             fromHost = null;
           }
         } else {
@@ -157,7 +161,7 @@ implements Tool {
           toUrl = normalizers.normalize(toUrl, URLNormalizers.SCOPE_OUTLINK);
           try {
             toUrl = filters.filter(toUrl);
-          } catch (URLFilterException e) {
+          } catch (final URLFilterException e) {
             continue;
           }
           if (toUrl == null) {
@@ -167,7 +171,7 @@ implements Tool {
           if (ignoreExternalLinks) {
             try {
               toHost = new URL(toUrl).getHost().toLowerCase();
-            } catch (MalformedURLException e) {
+            } catch (final MalformedURLException e) {
               toHost = null;
             }
             if (toHost == null || !toHost.equals(fromHost)) { // external links
@@ -189,7 +193,7 @@ implements Tool {
       OutputCollector<ImmutableBytesWritable, BatchUpdate> output,
       Reporter reporter)
   throws IOException {
-    output.collect(key, values.next().makeBatchUpdate(key.get()));
+    output.collect(key, values.next().makeBatchUpdate());
   }
 
   public void parse(String table) throws IOException {
@@ -197,7 +201,7 @@ implements Tool {
     LOG.info("ParseHbase: starting");
     LOG.info("ParseHbase: segment: " + table);
 
-    JobConf job = new NutchJob(getConf());
+    final JobConf job = new NutchJob(getConf());
     job.setJobName("parse-hbase " + table);
 
     TableMapReduce.initJob(table, getColumns(job),
@@ -209,10 +213,12 @@ implements Tool {
   }
 
   private String getColumns(JobConf job) {
-    Set<String> columnSet = new HashSet<String>(COLUMNS);
-    ParserFactoryHbase parserFactory = new ParserFactoryHbase(job);
+    final Set<String> columnSet = new HashSet<String>(COLUMNS);
+    final ParserFactoryHbase parserFactory = new ParserFactoryHbase(job);
     columnSet.addAll(parserFactory.getColumnSet());
     columnSet.addAll(SignatureFactoryHbase.getSignature(job).getColumnSet());
+    final HtmlParseFiltersHbase filters = new HtmlParseFiltersHbase(job);
+    columnSet.addAll(filters.getColumnSet());
     return TableUtil.getColumns(columnSet);
   }
 
@@ -229,7 +235,7 @@ implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(NutchConfiguration.create(), new ParseTable(), args);
+    final int res = ToolRunner.run(NutchConfiguration.create(), new ParseTable(), args);
     System.exit(res);
   }
 

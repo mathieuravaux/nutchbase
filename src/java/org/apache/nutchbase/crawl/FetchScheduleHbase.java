@@ -50,8 +50,8 @@ public interface FetchScheduleHbase extends Configurable {
    * 
    * @param url url of the page
    * @param row url's row
-   * @param prevFetchTime previous value of fetch time, or 0 if not available
-   * @param prevModifiedTime previous value of modifiedTime, or 0 if not available
+   * @param prevFetchTime previous value of fetch time, or -1 if not available
+   * @param prevModifiedTime previous value of modifiedTime, or -1 if not available
    * @param fetchTime the latest time, when the page was recently re-fetched. Most FetchSchedule
    * implementations should update the value in {@param datum} to something greater than this value.
    * @param modifiedTime last time the content was modified. This information comes from

@@ -32,7 +32,12 @@ public class WebTableCreator {
     desc.addFamily(new HColumnDescriptor(TableColumns.PROTOCOL_STATUS));
     desc.addFamily(new HColumnDescriptor(TableColumns.TEXT));
     desc.addFamily(new HColumnDescriptor(TableColumns.REPR_URL));
+    desc.addFamily(new HColumnDescriptor(TableColumns.HEADERS));
     desc.addFamily(new HColumnDescriptor(TableColumns.METADATA));
+
+    // Hackish solution to access previous versions of some columns
+    desc.addFamily(new HColumnDescriptor(TableColumns.PREV_SIGNATURE));
+    desc.addFamily(new HColumnDescriptor(TableColumns.PREV_FETCH_TIME));
 
     HBaseAdmin admin = new HBaseAdmin(hbaseConf);
 

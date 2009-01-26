@@ -17,17 +17,14 @@
 
 package org.apache.nutchbase.indexer;
 
-// Lucene imports
-import java.util.Set;
-
-import org.apache.lucene.document.Document;
-
 // Hadoop imports
 import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 
 // Nutch imports
 import org.apache.nutch.indexer.IndexingException;
-import org.apache.nutch.plugin.Pluggable;
+import org.apache.nutch.indexer.NutchDocument;
+import org.apache.nutchbase.plugin.PluggableHbase;
 import org.apache.nutchbase.util.hbase.ImmutableRowPart;
 
 
@@ -35,7 +32,7 @@ import org.apache.nutchbase.util.hbase.ImmutableRowPart;
  * fields.  All plugins found which implement this extension point are run
  * sequentially on the parse.
  */
-public interface IndexingFilterHbase extends Pluggable, Configurable {
+public interface IndexingFilterHbase extends PluggableHbase, Configurable {
   /** The name of the extension point. */
   final static String X_POINT_ID = IndexingFilterHbase.class.getName();
 
@@ -50,8 +47,15 @@ public interface IndexingFilterHbase extends Pluggable, Configurable {
    * should be discarded)
    * @throws IndexingException
    */
-  Document filter(Document doc, String url, ImmutableRowPart row)
+  NutchDocument filter(NutchDocument doc, String url, ImmutableRowPart row)
     throws IndexingException;
   
-  Set<String> getColumnSet();
+  /** Adds index-level configuraition options.
+   * Implementations can update given configuration to pass document-independent
+   * information to indexing backends. As a rule of thumb, prefix meta keys
+   * with the name of the backend intended. For example, when
+   * passing information to lucene backend, prefix keys with "lucene.".
+   * @param conf Configuration instance.
+   * */
+  public void addIndexBackendOptions(Configuration conf);
 }

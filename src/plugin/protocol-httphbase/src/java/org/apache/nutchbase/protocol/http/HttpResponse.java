@@ -159,6 +159,12 @@ public class HttpResponse implements Response {
           Http.LOG.trace("fetched " + content.length + " bytes from " + url);
         }
       }
+      
+      // add headers in metadata to row
+      row.deleteHeaders();
+      for (String key : headers.names()) {
+        row.addHeader(key, headers.get(key));
+      }
 
     } finally {
       if (socket != null)

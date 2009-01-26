@@ -25,6 +25,7 @@ import org.apache.nutch.crawl.CrawlDb;
 import org.apache.nutch.crawl.FetchSchedule;
 import org.apache.nutch.crawl.Inlink;
 import org.apache.nutch.crawl.NutchWritable;
+import org.apache.nutch.crawl.SignatureComparator;
 import org.apache.nutch.parse.Outlink;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.NutchJob;
@@ -56,6 +57,8 @@ implements Tool {
     COLUMNS.add(TableColumns.FETCH_TIME_STR);
     COLUMNS.add(TableColumns.MODIFIED_TIME_STR);
     COLUMNS.add(TableColumns.FETCH_INTERVAL_STR);
+    COLUMNS.add(TableColumns.PREV_FETCH_TIME_STR);
+    COLUMNS.add(TableColumns.PREV_SIGNATURE_STR);
   }
   
   private int retryMax;
@@ -134,7 +137,7 @@ implements Tool {
       if (!additionsAllowed) {
         return;
       }
-      row = new RowPart();
+      row = new RowPart(key.get());
       schedule.initializeSchedule(url, row);
       row.setStatus(CrawlDatumHbase.STATUS_UNFETCHED);
       row.setScore(scoreInjected);
@@ -157,12 +160,20 @@ implements Tool {
           if (status == CrawlDatumHbase.STATUS_NOTMODIFIED) {
             modified = FetchSchedule.STATUS_NOTMODIFIED;
           }
-          // TODO: I am not sure how we access multiple versions
-          // of signature, fetchTime or modifiedTime. So
-          // FetchSchedule-s don't work correctly for now
+          byte[] prevSig = row.getPrevSignature();
+          byte[] signature = row.getSignature();
+          if (prevSig != null && signature != null) {
+            if (SignatureComparator._compare(prevSig, signature) != 0) {
+              modified = FetchSchedule.STATUS_MODIFIED;
+            } else {
+              modified = FetchSchedule.STATUS_NOTMODIFIED;
+            }
+          }
           long fetchTime = row.getFetchTime();
+          long prevFetchTime = row.getPrevFetchTime();
           long modifiedTime = row.getModifiedTime();
-          schedule.setFetchSchedule(url, row, 0L, 0L,
+
+          schedule.setFetchSchedule(url, row, prevFetchTime, 0L,
               fetchTime, modifiedTime, modified);
           if (maxInterval < row.getFetchInterval())
             schedule.forceRefetch(url, row, false);
@@ -193,7 +204,7 @@ implements Tool {
     row.deleteMeta(FetcherHbase.TMP_PARSE_MARK);
     row.deleteMeta(ParseTable.TMP_UPDATE_MARK);
     
-    output.collect(key, row.makeBatchUpdate(key.get()));
+    output.collect(key, row.makeBatchUpdate());
   }
   
   private void updateTable(String table) throws IOException {

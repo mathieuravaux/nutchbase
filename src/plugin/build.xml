@@ -56,6 +56,7 @@
      <ant dir="parse-html" target="deploy"/>
      <ant dir="parse-htmlhbase" target="deploy"/>
      <ant dir="parse-js" target="deploy"/>
+     <ant dir="parse-jshbase" target="deploy"/>
      <!-- <ant dir="parse-mp3" target="deploy"/> -->
      <ant dir="parse-msexcel" target="deploy"/>
      <ant dir="parse-mspowerpoint" target="deploy"/>
@@ -164,6 +165,7 @@
     <ant dir="parse-html" target="clean"/>
     <ant dir="parse-htmlhbase" target="clean"/>
     <ant dir="parse-js" target="clean"/>
+    <ant dir="parse-jshbase" target="clean"/>
     <ant dir="parse-mp3" target="clean"/>
     <ant dir="parse-msexcel" target="clean"/>
     <ant dir="parse-mspowerpoint" target="clean"/>

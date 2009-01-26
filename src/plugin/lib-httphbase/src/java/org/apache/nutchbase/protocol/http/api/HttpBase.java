@@ -38,14 +38,13 @@ import org.apache.nutch.protocol.ProtocolStatus;
 import org.apache.nutch.protocol.RobotRules;
 import org.apache.nutch.util.GZIPUtils;
 import org.apache.nutch.util.LogUtil;
+import org.apache.nutch.util.MimeUtil;
 import org.apache.nutchbase.protocol.ProtocolHbase;
 import org.apache.nutchbase.util.hbase.ImmutableRowPart;
 import org.apache.nutchbase.util.hbase.RowPart;
 
 // Hadoop imports
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.io.BatchUpdate;
-import org.apache.hadoop.hbase.io.RowResult;
 
 /**
  * @author J&eacute;r&ocirc;me Charron
@@ -102,18 +101,20 @@ public abstract class HttpBase implements ProtocolHbase {
    * a request finishes.  This way only one thread at a time accesses a
    * host.
    */
-  private static HashMap BLOCKED_ADDR_TO_TIME = new HashMap();
+  private static HashMap<String, Long> BLOCKED_ADDR_TO_TIME =
+    new HashMap<String, Long>();
   
   /**
    * Maps a host to the number of threads accessing that host.
    */
-  private static HashMap THREADS_PER_HOST_COUNT = new HashMap();
+  private static HashMap<String, Integer> THREADS_PER_HOST_COUNT =
+    new HashMap<String, Integer>();
   
   /**
    * Queue of blocked hosts.  This contains all of the non-zero entries
    * from BLOCKED_ADDR_TO_TIME, ordered by increasing time.
    */
-  private static LinkedList BLOCKED_ADDR_QUEUE = new LinkedList();
+  private static LinkedList<String> BLOCKED_ADDR_QUEUE = new LinkedList<String>();
   
   /** The default logger */
   private final static Log LOGGER = LogFactory.getLog(HttpBase.class);
@@ -126,6 +127,8 @@ public abstract class HttpBase implements ProtocolHbase {
   
   /** Do we block by IP addresses or by hostnames? */
   private boolean byIP = true;
+  
+  private MimeUtil mimeTypes;
  
   /** Do we use HTTP/1.1? */
   protected boolean useHttp11 = false;
@@ -168,6 +171,7 @@ public abstract class HttpBase implements ProtocolHbase {
         this.maxCrawlDelay = (long)(conf.getInt("fetcher.max.crawl.delay", -1) * 1000);
         // backward-compatible default setting
         this.byIP = conf.getBoolean("fetcher.threads.per.host.by.ip", true);
+        this.mimeTypes = new MimeUtil(conf);
         this.useHttp11 = conf.getBoolean("http.useHttp11", false);
         this.robots.setConf(conf);
         this.checkBlocking = conf.getBoolean(Protocol.CHECK_BLOCKING, true);
@@ -228,7 +232,7 @@ public abstract class HttpBase implements ProtocolHbase {
       Content c = new Content(u.toString(), u.toString(),
                               (content == null ? EMPTY_CONTENT : content),
                               response.getHeader("Content-Type"),
-                              response.getHeaders(), this.conf);
+                              response.getHeaders(), mimeTypes);
       
       if (code == 200) { // got a good response
         return new ProtocolOutput(c); // return it
@@ -354,11 +358,11 @@ public abstract class HttpBase implements ProtocolHbase {
       
       Long time;
       synchronized (BLOCKED_ADDR_TO_TIME) {
-        time = (Long) BLOCKED_ADDR_TO_TIME.get(host);
+        time = BLOCKED_ADDR_TO_TIME.get(host);
         if (time == null) {                       // address is free
           
           // get # of threads already accessing this addr
-          Integer counter = (Integer)THREADS_PER_HOST_COUNT.get(host);
+          Integer counter = THREADS_PER_HOST_COUNT.get(host);
           int count = (counter == null) ? 0 : counter.intValue();
           
           count++;                              // increment & store
@@ -393,7 +397,7 @@ public abstract class HttpBase implements ProtocolHbase {
   
   private void unblockAddr(String host, long crawlDelay) {
     synchronized (BLOCKED_ADDR_TO_TIME) {
-      int addrCount = ((Integer)THREADS_PER_HOST_COUNT.get(host)).intValue();
+      int addrCount = THREADS_PER_HOST_COUNT.get(host).intValue();
       if (addrCount == 1) {
         THREADS_PER_HOST_COUNT.remove(host);
         BLOCKED_ADDR_QUEUE.addFirst(host);
@@ -408,8 +412,8 @@ public abstract class HttpBase implements ProtocolHbase {
   private static void cleanExpiredServerBlocks() {
     synchronized (BLOCKED_ADDR_TO_TIME) {
       for (int i = BLOCKED_ADDR_QUEUE.size() - 1; i >= 0; i--) {
-        String host = (String) BLOCKED_ADDR_QUEUE.get(i);
-        long time = ((Long) BLOCKED_ADDR_TO_TIME.get(host)).longValue();
+        String host = BLOCKED_ADDR_QUEUE.get(i);
+        long time = BLOCKED_ADDR_TO_TIME.get(host).longValue();
         if (time <= System.currentTimeMillis()) {
           BLOCKED_ADDR_TO_TIME.remove(host);
           BLOCKED_ADDR_QUEUE.remove(i);
@@ -502,6 +506,7 @@ public abstract class HttpBase implements ProtocolHbase {
   }
   
   protected static void main(HttpBase http, String[] args) throws Exception {
+    @SuppressWarnings("unused")
     boolean verbose = false;
     String url = null;
     

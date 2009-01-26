@@ -65,8 +65,14 @@ public final class Content implements Writable{
     metadata = new Metadata();
   }
 
+  @Deprecated
   public Content(String url, String base, byte[] content, String contentType,
       Metadata metadata, Configuration conf) {
+    this(url, base, content, contentType, metadata, new MimeUtil(conf));
+  }
+  
+  public Content(String url, String base, byte[] content, String contentType,
+      Metadata metadata, MimeUtil mimeTypes) {
 
     if (url == null)
       throw new IllegalArgumentException("null url");
@@ -82,7 +88,7 @@ public final class Content implements Writable{
     this.content = content;
     this.metadata = metadata;
 
-    this.mimeTypes = new MimeUtil(conf);
+    this.mimeTypes = mimeTypes;
     this.contentType = getContentType(contentType, url, content);
   }
 

@@ -174,7 +174,7 @@ implements Tool {
         ImmutableBytesWritable outKey =
           new ImmutableBytesWritable(row.getRowId());
         row.putMeta(TMP_FETCH_MARK, TableUtil.YES_VAL);
-        output.collect(outKey, row.makeBatchUpdate(outKey.get()));
+        output.collect(outKey, row.makeBatchUpdate());
         hostCount++;
         count++;
       }

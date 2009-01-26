@@ -27,25 +27,20 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.io.BatchUpdate;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.io.RowResult;
-import org.apache.hadoop.hbase.mapred.TableInputFormat;
-import org.apache.hadoop.hbase.mapred.TableOutputFormat;
+import org.apache.hadoop.hbase.mapred.TableMap;
+import org.apache.hadoop.hbase.mapred.TableMapReduceUtil;
+import org.apache.hadoop.hbase.mapred.TableReduce;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
-import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
 @SuppressWarnings("unchecked")
 public abstract class TableMapReduce<K extends WritableComparable, V extends Writable>
 extends Configured
-implements Mapper<ImmutableBytesWritable, RowResult, K, V>,
-           Reducer<K, V, ImmutableBytesWritable, BatchUpdate>,
-           Closeable, JobConfigurable
-{
+implements TableMap<K, V>, TableReduce<K, V>, Closeable, JobConfigurable {
   
   /**
    * Use this before submitting a TableMapReduce job. It will
@@ -59,19 +54,10 @@ implements Mapper<ImmutableBytesWritable, RowResult, K, V>,
       Class<? extends TableMapReduce> mrClass, 
       Class<? extends WritableComparable> outputKeyClass, 
       Class<? extends Writable> outputValueClass,
-      JobConf job) {
-    job.setInputFormat(TableInputFormat.class);
-    job.setMapOutputValueClass(outputValueClass);
-    job.setMapOutputKeyClass(outputKeyClass);
-    job.setMapperClass(mrClass);
-    FileInputFormat.addInputPaths(job, table);
-    job.set(TableInputFormat.COLUMN_LIST, columns);
-    
-    job.setOutputFormat(TableOutputFormat.class);
-    job.setReducerClass(mrClass);
-    job.set(TableOutputFormat.OUTPUT_TABLE, table);
-    job.setOutputKeyClass(ImmutableBytesWritable.class);
-    job.setOutputValueClass(BatchUpdate.class);
+      JobConf job) throws IOException {
+    TableMapReduceUtil.initTableMapJob(table, columns, mrClass,
+                                       outputKeyClass, outputValueClass, job);
+    TableMapReduceUtil.initTableReduceJob(table, mrClass, job);
   }
 
   /**
@@ -98,7 +84,7 @@ implements Mapper<ImmutableBytesWritable, RowResult, K, V>,
   public abstract void reduce(K key, Iterator<V> values,
     OutputCollector<ImmutableBytesWritable, BatchUpdate> output, Reporter reporter)
   throws IOException;
-  
+
   /** Default implementation that does nothing. */
   public void close() throws IOException {
   }
@@ -106,5 +92,4 @@ implements Mapper<ImmutableBytesWritable, RowResult, K, V>,
   /** Default implementation that does nothing. */
   public void configure(JobConf job) {
   }
-
 }

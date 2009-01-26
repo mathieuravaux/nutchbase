@@ -18,8 +18,8 @@
 package org.apache.nutchbase.parse.html;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -38,14 +38,16 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.metadata.Nutch;
-import org.apache.nutch.protocol.Content;
 import org.apache.hadoop.conf.*;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.nutch.parse.*;
 import org.apache.nutch.util.*;
+import org.apache.nutchbase.parse.HtmlParseFiltersHbase;
 import org.apache.nutchbase.parse.ParseHbase;
 import org.apache.nutchbase.parse.ParserHbase;
 import org.apache.nutchbase.util.hbase.RowPart;
 import org.apache.nutchbase.util.hbase.TableColumns;
+import org.apache.nutchbase.util.hbase.TableUtil;
 
 public class HtmlParserHbase implements ParserHbase {
   public static final Log LOG = LogFactory.getLog("org.apache.nutch.parse.html");
@@ -119,7 +121,7 @@ public class HtmlParserHbase implements ParserHbase {
   
   private DOMContentUtils utils;
 
-  private HtmlParseFilters htmlParseFilters;
+  private HtmlParseFiltersHbase htmlParseFilters;
   
   private String cachingPolicy;
 
@@ -146,12 +148,9 @@ public class HtmlParserHbase implements ParserHbase {
       InputSource input = new InputSource(new ByteArrayInputStream(contentInOctets));
 
       EncodingDetector detector = new EncodingDetector(conf);
-      String contentType = row.getContentType();
-      Content content = new Content(url, baseUrl, contentInOctets, contentType,
-                                    new Metadata(), conf);
-      detector.autoDetectClues(content, true);
+      detector.autoDetectClues(row, true);
       detector.addClue(sniffCharacterEncoding(contentInOctets), "sniffed");
-      String encoding = detector.guessEncoding(content, defaultCharEncoding);
+      String encoding = detector.guessEncoding(row, defaultCharEncoding);
 
       metadata.set(Metadata.ORIGINAL_CHAR_ENCODING, encoding);
       metadata.set(Metadata.CHAR_ENCODING_FOR_CONVERSION, encoding);
@@ -206,6 +205,12 @@ public class HtmlParserHbase implements ParserHbase {
     }
     
     ParseHbase parse = new ParseHbase(text, title, outlinks, status);
+    parse = htmlParseFilters.filter(url, row, parse, metaTags, root);
+    
+    if (metaTags.getNoCache()) {             // not okay to cache
+      row.putMeta(Nutch.CACHING_FORBIDDEN_KEY, Bytes.toBytes(cachingPolicy));
+    }
+    
     return parse;
   }
 
@@ -268,7 +273,7 @@ public class HtmlParserHbase implements ParserHbase {
 
   public void setConf(Configuration conf) {
     this.conf = conf;
-    this.htmlParseFilters = new HtmlParseFilters(getConf());
+    this.htmlParseFilters = new HtmlParseFiltersHbase(getConf());
     this.parserImpl = getConf().get("parser.html.impl", "neko");
     this.defaultCharEncoding = getConf().get(
         "parser.character.encoding.default", "windows-1252");
@@ -283,5 +288,27 @@ public class HtmlParserHbase implements ParserHbase {
 
   public Set<String> getColumnSet() {
     return COLUMNS;
+  }
+  
+  public static void main(String[] args) throws Exception {
+    //LOG.setLevel(Level.FINE);
+    String name = args[0];
+    String url = "file:"+name;
+    File file = new File(name);
+    byte[] bytes = new byte[(int)file.length()];
+    DataInputStream in = new DataInputStream(new FileInputStream(file));
+    in.readFully(bytes);
+    Configuration conf = NutchConfiguration.create();
+    HtmlParserHbase parser = new HtmlParserHbase();
+    parser.setConf(conf);
+    RowPart row = new RowPart(Bytes.toBytes(TableUtil.reverseUrl(url)));
+    row.setBaseUrl(url);
+    row.setContent(bytes);
+    row.setContentType("text/html");
+    ParseHbase parse = parser.getParse(url, row);
+    System.out.println("title: "+parse.getTitle());
+    System.out.println("text: "+parse.getText());
+    System.out.println("outlinks: " + Arrays.toString(parse.getOutlinks()));
+    
   }
 }

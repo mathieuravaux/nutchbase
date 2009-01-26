@@ -139,7 +139,7 @@ implements Tool {
   throws IOException {
     boolean isOld = values.next().get();
 
-    RowPart row = new RowPart();
+    RowPart row = new RowPart(key.get());
     row.deleteMeta(INJECT_KEY_STR);
 
     if (!isOld) {
@@ -150,7 +150,7 @@ implements Tool {
       row.setRetriesSinceFetch(0);
     }
 
-    output.collect(key, row.makeBatchUpdate(key.get()));
+    output.collect(key, row.makeBatchUpdate());
   }
 
   public void inject(String table, Path urlDir) throws IOException {

@@ -18,23 +18,29 @@ import org.apache.nutch.parse.Outlink;
 import org.apache.nutch.parse.ParseStatus;
 import org.apache.nutch.protocol.ProtocolStatus;
 
-public class ImmutableRowPart implements Writable {
-  
-  protected static final int INLINKS_STR_LEN  = 
-    TableColumns.INLINKS_STR.length();
-  protected static final int OUTLINKS_STR_LEN = 
-    TableColumns.OUTLINKS_STR.length();
-  
+public class ImmutableRowPart implements Writable, TableColumns {
+
+  protected static final int INLINKS_STR_LEN  = INLINKS_STR.length();
+  protected static final int OUTLINKS_STR_LEN = OUTLINKS_STR.length();
+
   protected RowResult rowResult;
-  
+
+  /** For Writable. Do not use directly. */
   public ImmutableRowPart() { rowResult = new RowResult(); }
-  
+
   public ImmutableRowPart(RowResult rowResult) {
     this.rowResult = rowResult;
   }
-  
+
   protected String stringify(Cell c) {
+    if (c == null)
+      return null;
     return Bytes.toString(c.getValue());
+  }
+
+  protected byte[] get(byte[] column) {
+    final Cell c = rowResult.get(column);
+    return c == null ? null : c.getValue();
   }
 
   public ImmutableRowPart(final byte[] rowId) {
@@ -48,13 +54,13 @@ public class ImmutableRowPart implements Writable {
   public void write(DataOutput out) throws IOException {
     rowResult.write(out);
   }
-  
+
   public byte[] getRowId() {
     return rowResult.getRow();
   }
-  
+
   /** Checks if row has the specified column.
-   * 
+   *
    * @param col Column to be checked
    * @return true if given column exists in row
    */
@@ -63,119 +69,157 @@ public class ImmutableRowPart implements Writable {
   }
 
   public String getBaseUrl() {
-    return stringify(rowResult.get(TableColumns.BASE_URL));
+    return stringify(rowResult.get(BASE_URL));
   }
 
   public byte getStatus() {
-    return rowResult.get(TableColumns.STATUS).getValue()[0];
+    return rowResult.get(STATUS).getValue()[0];
   }
-  
+
   public byte[] getSignature() {
-    return rowResult.get(TableColumns.SIGNATURE).getValue();
+    if (!hasColumn(SIGNATURE))
+      return null;
+    return rowResult.get(SIGNATURE).getValue();
+  }
+
+  public byte[] getPrevSignature() {
+    if (!hasColumn(PREV_SIGNATURE))
+      return null;
+    return rowResult.get(PREV_SIGNATURE).getValue();
   }
 
   public long getFetchTime() {
-    return Bytes.toLong(rowResult.get(TableColumns.FETCH_TIME).getValue());
+    return Bytes.toLong(rowResult.get(FETCH_TIME).getValue());
   }
-  
+
+  public long getPrevFetchTime() {
+    Cell c = rowResult.get(PREV_FETCH_TIME);
+    if (c == null)
+      return 0L;
+
+    return Bytes.toLong(c.getValue());
+  }
+
   public long getModifiedTime() {
-    return Bytes.toLong(rowResult.get(TableColumns.MODIFIED_TIME).getValue());
+    return Bytes.toLong(rowResult.get(MODIFIED_TIME).getValue());
   }
 
   public int getFetchInterval() {
-    return Bytes.toInt(rowResult.get(TableColumns.FETCH_INTERVAL).getValue());
+    return Bytes.toInt(rowResult.get(FETCH_INTERVAL).getValue());
   }
 
   public int getRetriesSinceFetch() {
-    return Bytes.toInt(rowResult.get(TableColumns.RETRIES).getValue());
+    return Bytes.toInt(rowResult.get(RETRIES).getValue());
   }
-  
+
   public ProtocolStatus getProtocolStatus() {
-    ProtocolStatus protocolStatus = new ProtocolStatus();
-    byte[] val = rowResult.get(TableColumns.PROTOCOL_STATUS).getValue();
+    final ProtocolStatus protocolStatus = new ProtocolStatus();
+    final byte[] val = rowResult.get(PROTOCOL_STATUS).getValue();
     try {
       return (ProtocolStatus) Writables.getWritable(val, protocolStatus);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
-  
+
   public float getScore() {
-    return TableUtil.toFloat(rowResult.get(TableColumns.SCORE).getValue());
+    return TableUtil.toFloat(rowResult.get(SCORE).getValue());
   }
-  
+
   public byte[] getContent() {
-    return rowResult.get(TableColumns.CONTENT).getValue();
+    return rowResult.get(CONTENT).getValue();
   }
-  
+
   public String getContentType() {
-    return stringify(rowResult.get(TableColumns.CONTENT_TYPE));
+    return stringify(rowResult.get(CONTENT_TYPE));
   }
 
   public String getText() {
-    return stringify(rowResult.get(TableColumns.TEXT));
+    return stringify(rowResult.get(TEXT));
   }
-  
+
   public String getTitle() {
-    return stringify(rowResult.get(TableColumns.TITLE));
+    return stringify(rowResult.get(TITLE));
   }
-  
+
   public ParseStatus getParseStatus() {
-    ParseStatus parseStatus = new ParseStatus();
-    byte[] val = rowResult.get(TableColumns.PARSE_STATUS).getValue();
+    final ParseStatus parseStatus = new ParseStatus();
+    final byte[] val = rowResult.get(PARSE_STATUS).getValue();
     try {
       return (ParseStatus) Writables.getWritable(val, parseStatus);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       return null;
     }
   }
-  
+
   public String getReprUrl() {
-    return stringify(rowResult.get(TableColumns.REPR_URL));
+    return stringify(rowResult.get(REPR_URL));
   }
-  
+
   public Collection<Outlink> getOutlinks() {
-    List<Outlink> outlinks = new ArrayList<Outlink>();
-    for (byte[] col : rowResult.keySet()) {
-      String column = Bytes.toString(col);
-      if (column.startsWith(TableColumns.OUTLINKS_STR)) {
-        String toUrl = column.substring(OUTLINKS_STR_LEN);
-        String anchor = Bytes.toString(rowResult.get(col).getValue());
+    final List<Outlink> outlinks = new ArrayList<Outlink>();
+    for (final byte[] col : rowResult.keySet()) {
+      final String column = Bytes.toString(col);
+      if (column.startsWith(OUTLINKS_STR)) {
+        final String toUrl = column.substring(OUTLINKS_STR_LEN);
+        final String anchor = Bytes.toString(rowResult.get(col).getValue());
         outlinks.add(new Outlink(toUrl, anchor));
       }
     }
     return outlinks;
   }
-  
+
   public Collection<Inlink> getInlinks() {
-    List<Inlink> inlinks = new ArrayList<Inlink>();
-    for (byte[] col : rowResult.keySet()) {
-      String column = Bytes.toString(col);
-      if (column.startsWith(TableColumns.INLINKS_STR)) {
-        String fromUrl = column.substring(INLINKS_STR_LEN);
-        String anchor = Bytes.toString(rowResult.get(col).getValue());
+    final List<Inlink> inlinks = new ArrayList<Inlink>();
+    for (final byte[] col : rowResult.keySet()) {
+      final String column = Bytes.toString(col);
+      if (column.startsWith(INLINKS_STR)) {
+        final String fromUrl = column.substring(INLINKS_STR_LEN);
+        final String anchor = Bytes.toString(rowResult.get(col).getValue());
         inlinks.add(new Inlink(fromUrl, anchor));
       }
     }
-    
+
     return inlinks;
   }
-  
+
+  /** Returns a header.
+   * @param key Header-key
+   * @return headers if it exists, null otherwise
+   */
+  public String getHeader(String key) {
+    final byte[] headerKey = Bytes.toBytes(HEADERS_STR  + key);
+    if (!hasColumn(headerKey)) {
+      return null;
+    }
+    return stringify(rowResult.get(headerKey));
+  }
+
   /** Checks if a metadata key exists in "metadata" column.
    * @param row Row from hbase
    * @param metaKey Key to search in metadata column
    * @return true if key exists
    */
   public boolean hasMeta(String metaKey) {
-    return hasColumn(Bytes.toBytes(TableColumns.METADATA_STR  + metaKey));
+    return hasColumn(Bytes.toBytes(METADATA_STR  + metaKey));
   }
 
   /** Read a metadata key from "metadata" column.
    * @param metaKey Key to search in metadata column
-   * @return Value in byte array form
+   * @return Value in byte array form or null if metadata doesn't exist
    */
   public byte[] getMeta(String metaKey) {
-    return rowResult.get(TableColumns.METADATA_STR + metaKey).getValue();
-  }  
+    final byte[] col = Bytes.toBytes(METADATA_STR + metaKey);
+    return get(col);
+  }
+
+  /** Read a metadata key from "metadata" column.
+   * @param metaKey Key to search in metadata column
+   * @return Value in string form or null if metadata doesn't exist
+   */
+  public String getMetaAsString(String metaKey) {
+    final byte[] val = getMeta(metaKey);
+    return val == null ? null : Bytes.toString(val);
+  }
 
 }

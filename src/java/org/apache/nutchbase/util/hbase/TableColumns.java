@@ -2,7 +2,7 @@ package org.apache.nutchbase.util.hbase;
 
 import org.apache.hadoop.hbase.util.Bytes;
 
-public class TableColumns {
+public interface TableColumns {
   public static final String BASE_URL_STR         = "baseUrl:";
   public static final String STATUS_STR           = "status:";
   public static final String FETCH_TIME_STR       = "fetchTime:";
@@ -20,8 +20,13 @@ public class TableColumns {
   public static final String PROTOCOL_STATUS_STR  = "protocolStatus:";
   public static final String TEXT_STR             = "text:";
   public static final String REPR_URL_STR         = "reprUrl:";
+  public static final String HEADERS_STR          = "headers:";
   public static final String METADATA_STR         = "metadata:";
-  
+
+  // Hackish solution to access previous versions of some columns
+  public static final String PREV_SIGNATURE_STR      = "prevSig:";
+  public static final String PREV_FETCH_TIME_STR     = "prevFetch:";
+
   public static final byte[] BASE_URL          = Bytes.toBytes(BASE_URL_STR);
   public static final byte[] STATUS            = Bytes.toBytes(STATUS_STR);
   public static final byte[] FETCH_TIME        = Bytes.toBytes(FETCH_TIME_STR);
@@ -39,5 +44,11 @@ public class TableColumns {
   public static final byte[] PROTOCOL_STATUS   = Bytes.toBytes(PROTOCOL_STATUS_STR);
   public static final byte[] TEXT              = Bytes.toBytes(TEXT_STR);
   public static final byte[] REPR_URL          = Bytes.toBytes(REPR_URL_STR);
+  public static final byte[] HEADERS           = Bytes.toBytes(HEADERS_STR);
   public static final byte[] METADATA          = Bytes.toBytes(METADATA_STR);
+
+  // Hackish solution to access previous versions of some columns
+  public static final byte[] PREV_SIGNATURE     = Bytes.toBytes(PREV_SIGNATURE_STR);
+  public static final byte[] PREV_FETCH_TIME    = Bytes.toBytes(PREV_FETCH_TIME_STR);
+
 }
