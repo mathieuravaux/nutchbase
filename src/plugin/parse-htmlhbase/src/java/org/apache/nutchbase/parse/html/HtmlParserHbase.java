@@ -124,6 +124,8 @@ public class HtmlParserHbase implements ParserHbase {
   private HtmlParseFiltersHbase htmlParseFilters;
   
   private String cachingPolicy;
+	
+  private boolean ignoreNoFollow;
 
   public ParseHbase getParse(String url, RowPart row) {
     HTMLMetaTags metaTags = new HTMLMetaTags();
@@ -186,7 +188,7 @@ public class HtmlParserHbase implements ParserHbase {
       title = sb.toString().trim();
     }
       
-    if (!metaTags.getNoFollow()) {              // okay to follow links
+    if (!metaTags.getNoFollow() || ignoreNoFollow) {              // okay to follow links
       ArrayList<Outlink> l = new ArrayList<Outlink>();   // extract outlinks
       URL baseTag = utils.getBase(root);
       if (LOG.isTraceEnabled()) { LOG.trace("Getting links..."); }
@@ -280,6 +282,7 @@ public class HtmlParserHbase implements ParserHbase {
     this.utils = new DOMContentUtils(conf);
     this.cachingPolicy = getConf().get("parser.caching.forbidden.policy",
         Nutch.CACHING_FORBIDDEN_CONTENT);
+	this.ignoreNoFollow = conf.getBoolean("parser.html.outlinks.ignore_nofollow", false);
   }
 
   public Configuration getConf() {

@@ -965,6 +965,13 @@
   for most people would be "img,script,link".</description>
 </property>
 
+<property>
+  <name>parser.html.outlinks.ignore_nofollow</name>
+  <value>false</value>
+  <description>Boolean value instructing the parser to ignore nofollow
+  directives on pages and includes them in outlinks. Defaults to false, 
+  which honors the nofollow and does not include them in outlinks</description>
+</property>
 
 <!-- urlfilter plugin properties -->
 

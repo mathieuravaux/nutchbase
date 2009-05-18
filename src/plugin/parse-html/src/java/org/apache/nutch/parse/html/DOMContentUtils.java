@@ -57,6 +57,7 @@ public class DOMContentUtils {
   
   private HashMap linkParams = new HashMap();
   private Configuration conf;
+  private boolean ignoreNoFollow;
   
   public DOMContentUtils(Configuration conf) {
     setConf(conf);
@@ -87,6 +88,7 @@ public class DOMContentUtils {
       if ( ! forceTags.contains(ignoreTags[i]) )
         linkParams.remove(ignoreTags[i]);
     }
+	this.ignoreNoFollow = conf.getBoolean("parser.html.outlinks.ignore_nofollow", false);
   }
   
   /**
@@ -397,7 +399,7 @@ public class DOMContentUtils {
                 post = true;
               }
             }
-            if (target != null && !noFollow && !post)
+            if (target != null && (!noFollow || ignoreNoFollow) && !post)
               try {
                 
                 URL url = (base.toString().indexOf(';') > 0) ? 
