@@ -215,7 +215,7 @@
     <javac 
      encoding="${build.encoding}" 
      srcdir="${test.src.dir}"
-     includes="org/apache/nutch/**/*.java"
+     includes="org/apache/nutch*/**/*.java"
      destdir="${test.build.classes}"
      debug="${javac.debug}"
      optimize="${javac.optimize}"
