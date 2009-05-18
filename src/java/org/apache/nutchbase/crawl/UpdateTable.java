@@ -43,9 +43,9 @@ implements Tool {
 
   public static final Log LOG = LogFactory.getLog(UpdateTable.class);
   
-  public static final String TMP_INDEX_MARK = "__tmp_index_mark__";
-  
   private static final Set<String> COLUMNS = new HashSet<String>();
+
+  private static final String ALL = "db.update.all";
   
   static {
     COLUMNS.add(TableColumns.OUTLINKS_STR);
@@ -67,6 +67,7 @@ implements Tool {
   private float scoreInjected;
   private FetchScheduleHbase schedule;
   private List<Inlink> inlinks = new ArrayList<Inlink>();
+  private boolean updateAll;
 
   @Override
   public void configure(JobConf job) {
@@ -74,7 +75,8 @@ implements Tool {
     additionsAllowed = job.getBoolean(CrawlDb.CRAWLDB_ADDITIONS_ALLOWED, true);
     scoreInjected = job.getFloat("db.score.injected", 1.0f);
     maxInterval = job.getInt("db.fetch.interval.max", 0 );
-    schedule = FetchScheduleFactoryHbase.getFetchSchedule(job);
+	updateAll = job.getBoolean("db.update.all", false);
+	schedule = FetchScheduleFactoryHbase.getFetchSchedule(job);
   }
 
   @Override
@@ -82,26 +84,28 @@ implements Tool {
       OutputCollector<ImmutableBytesWritable, NutchWritable> output,
       Reporter reporter)
   throws IOException {
+	  
+	ImmutableRowPart row = new ImmutableRowPart(rowResult);
+    
+	if (updateAll || row.hasMeta(ParseTable.TMP_UPDATE_MARK)) { 
+	  
+      output.collect(key, new NutchWritable(rowResult));
 
-    output.collect(key, new NutchWritable(rowResult));
+      Collection<Outlink> outlinks = row.getOutlinks();
     
-    ImmutableRowPart row = new ImmutableRowPart(rowResult);
-
-    Collection<Outlink> outlinks = row.getOutlinks();
+      if (outlinks.isEmpty()) {
+        return;
+      }
     
-    if (outlinks.isEmpty()) {
-      return;
-    }
+      String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
     
-    String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
-    
-    for (Outlink outlink : outlinks) {
-      String reversedOut = TableUtil.reverseUrl(outlink.getToUrl());
-      ImmutableBytesWritable outKey =
-        new ImmutableBytesWritable(reversedOut.getBytes());
-      output.collect(outKey, new NutchWritable(new Inlink(url, outlink.getAnchor())));
-    }
-    
+      for (Outlink outlink : outlinks) {
+        String reversedOut = TableUtil.reverseUrl(outlink.getToUrl());
+        ImmutableBytesWritable outKey =
+          new ImmutableBytesWritable(reversedOut.getBytes());
+        output.collect(outKey, new NutchWritable(new Inlink(url, outlink.getAnchor())));
+      }
+	}
   }
 
   @Override
@@ -200,18 +204,20 @@ implements Tool {
     
     // clear markers
     row.deleteMeta(FetcherHbase.REDIRECT_DISCOVERED);
-    row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);
+	row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);
     row.deleteMeta(FetcherHbase.TMP_PARSE_MARK);
-    row.deleteMeta(ParseTable.TMP_UPDATE_MARK);
+	row.deleteMeta(ParseTable.TMP_UPDATE_MARK);
     
     output.collect(key, row.makeBatchUpdate());
   }
   
-  private void updateTable(String table) throws IOException {
+  private void updateTable(String table, boolean updateAll) throws IOException {
     LOG.info("UpdateTable: starting");
     LOG.info("UpdateTable: table: " + table);
-    
+	if (updateAll && LOG.isWarnEnabled())
+	  LOG.warn("Running update with reset enabled - whole table will be modified.");
     JobConf job = new NutchJob(getConf());
+	job.setBoolean(ALL, updateAll);
     job.setJobName("update-table " + table);
     TableMapReduce.initJob(table, TableUtil.getColumns(COLUMNS), 
                            UpdateTable.class, ImmutableBytesWritable.class, 
@@ -223,14 +229,19 @@ implements Tool {
   }
   
   public int run(String[] args) throws Exception {
-    String usage = "Usage: UpdateTable <webtable>";
+    String usage = "Usage: UpdateTable <webtable> [-all]";
 
     if (args.length < 1) {
       System.err.println(usage);
       System.exit(-1);
     }
-
-    updateTable(args[0]);
+	boolean updateAll = false;
+	
+	for (int i = 1; i < args.length; i++) {
+	  if ("-all".equals(args[i]))
+		updateAll = true;
+	} 
+    updateTable(args[0], updateAll);
     return 0;
   }
 
