@@ -28,6 +28,7 @@
   import="org.apache.nutch.html.Entities"
   import="org.apache.nutch.metadata.Nutch"
   import="org.apache.nutch.searcher.*"
+  import="org.apache.nutchbase.searcher.*"
   import="org.apache.nutch.plugin.*"
   import="org.apache.nutch.clustering.*"
   import="org.apache.hadoop.conf.*"
@@ -82,7 +83,7 @@
 <%
   // The Nutch bean instance is initialized through a ServletContextListener 
   // that is setup in the web.xml file
-  NutchBean bean = NutchBean.get(application, nutchConf);
+  NutchBeanHbase bean = NutchBeanHbase.get(application, nutchConf);
   // set the character encoding to use when interpreting request values 
   request.setCharacterEncoding("UTF-8");
 

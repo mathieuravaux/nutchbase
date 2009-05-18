@@ -181,6 +181,7 @@
         <include name="lucene*.jar"/>
         <include name="taglibs-*.jar"/>
         <include name="hadoop-*.jar"/>
+        <include name="hbase*.jar"/>
         <include name="dom4j-*.jar"/>
         <include name="xerces-*.jar"/>
         <include name="tika-*.jar"/>

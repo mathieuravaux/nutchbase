@@ -24,11 +24,12 @@
 
   import="org.apache.nutch.html.Entities"
   import="org.apache.nutch.searcher.*"
+  import="org.apache.nutchbase.searcher.*"
   import="org.apache.hadoop.conf.Configuration"
   import="org.apache.nutch.util.NutchConfiguration"
 %><%
   Configuration nutchConf = NutchConfiguration.get(application);
-  NutchBean bean = NutchBean.get(application, nutchConf);
+  NutchBeanHbase bean = NutchBeanHbase.get(application, nutchConf);
   // set the character encoding to use when interpreting request values 
   request.setCharacterEncoding("UTF-8");
   bean.LOG.info("anchors request from " + request.getRemoteAddr());
