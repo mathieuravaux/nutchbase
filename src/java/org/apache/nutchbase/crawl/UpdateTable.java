@@ -100,10 +100,15 @@ implements Tool {
       String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
     
       for (Outlink outlink : outlinks) {
-        String reversedOut = TableUtil.reverseUrl(outlink.getToUrl());
-        ImmutableBytesWritable outKey =
-          new ImmutableBytesWritable(reversedOut.getBytes());
-        output.collect(outKey, new NutchWritable(new Inlink(url, outlink.getAnchor())));
+        try {
+          String reversedOut = TableUtil.reverseUrl(outlink.getToUrl());
+          ImmutableBytesWritable outKey =
+            new ImmutableBytesWritable(reversedOut.getBytes());
+          output.collect(outKey, new NutchWritable(new Inlink(url, outlink.getAnchor())));
+        } catch (Exception e) {
+          // Catching anything isn't usually good - but we should report it and shouldn't crash the process for a bad URL. 
+          LOG.info("Exception thrown by url: " + outlink.getToUrl().toString(), e);
+        }
       }
 	}
   }

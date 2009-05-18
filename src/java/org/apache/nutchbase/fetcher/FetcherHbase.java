@@ -625,9 +625,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
           fit.row.setBaseUrl(content.getBaseUrl());
           if (status == CrawlDatumHbase.STATUS_FETCHED)
             fit.row.putMeta(TMP_PARSE_MARK, TableUtil.YES_VAL);
-        }
-		// remove the fetch-mark  
-		fit.row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);  
+        }  
         output.collect(fit.key, fit.row);
       } catch (final IOException e) {
         e.printStackTrace(LogUtil.getFatalStream(LOG));
@@ -711,6 +709,8 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
       Reporter reporter) throws IOException {
     while (values.hasNext()) {
       final RowPart row = values.next();
+	  // remove the fetch-mark  
+	  row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);
       output.collect(key, row.makeBatchUpdate());
     }
   }
