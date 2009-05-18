@@ -1,19 +1,43 @@
 package org.apache.nutchbase.util.hbase;
 
 import java.io.IOException;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
-public class WebTableCreator {
+import org.apache.hadoop.conf.*;
 
-  public static void main(String args[]) throws IOException {
+import org.apache.nutch.util.NutchConfiguration;
 
+public class WebTableCreator extends Configured implements Tool {
+
+	public static final Log LOG = LogFactory.getLog(WebTableCreator.class);
+	
+	public static void main(String[] args) throws Exception {
+		int res = ToolRunner.run(NutchConfiguration.create(),
+								 new WebTableCreator(), args);
+		System.exit(res);
+	}
+
+public int run(String[] args) throws Exception {
+
+	if (args.length != 1) {
+		System.err.println("Usage: WebTableCreator <webtable>");
+		return -1;
+	}
+	try {
+	
     HBaseConfiguration hbaseConf = new HBaseConfiguration();
 
-    HTableDescriptor desc = new HTableDescriptor("webtable");
+		LOG.debug("Creating table: " + args[0]);
+    HTableDescriptor desc = new HTableDescriptor(args[0]);
     
     desc.addFamily(new HColumnDescriptor(TableColumns.BASE_URL));
     desc.addFamily(new HColumnDescriptor(TableColumns.STATUS));
@@ -40,7 +64,13 @@ public class WebTableCreator {
     desc.addFamily(new HColumnDescriptor(TableColumns.PREV_FETCH_TIME));
 
     HBaseAdmin admin = new HBaseAdmin(hbaseConf);
-
-    admin.createTable(desc);
+		LOG.warn("Calling createTable");
+		admin.createTable(desc);
+		return 0;
+	} catch (Exception e) {
+		LOG.fatal("WebTableCreator: " + StringUtils.stringifyException(e));
+		return -1;
+	}
+	
   }
 }
