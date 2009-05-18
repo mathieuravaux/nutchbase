@@ -182,6 +182,7 @@ implements Tool {
           row.addOutlink(new Outlink(toUrl, outlinks[i].getAnchor()));
         }
         row.putMeta(TMP_UPDATE_MARK, TableUtil.YES_VAL);
+		row.deleteMeta(FetcherHbase.TMP_PARSE_MARK);
       }
     }
 

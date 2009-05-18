@@ -316,6 +316,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
         final FetchItem fit = fiq.getFetchItem();
         if (fit != null) {
           totalSize.decrementAndGet();
+
           return fit;
         }
       }
@@ -430,7 +431,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
           fit = fetchQueues.getFetchItem();
           if (fit == null) {
             if (feeder.isAlive() || fetchQueues.getTotalSize() > 0) {
-              LOG.debug(getName() + " spin-waiting ...");
+              LOG.debug(getName() + " fetchQueues.getFetchItem() was null, spin-waiting ...");
               // spin-wait.
               spinWaiting.incrementAndGet();
               try {
@@ -625,6 +626,8 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
           if (status == CrawlDatumHbase.STATUS_FETCHED)
             fit.row.putMeta(TMP_PARSE_MARK, TableUtil.YES_VAL);
         }
+		// remove the fetch-mark  
+		fit.row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);  
         output.collect(fit.key, fit.row);
       } catch (final IOException e) {
         e.printStackTrace(LogUtil.getFatalStream(LOG));
@@ -679,7 +682,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
 
       reportStatus();
       LOG.info("-activeThreads=" + activeThreads + ", spinWaiting=" + spinWaiting.get()
-          + ", fetchQueues.totalSize=" + fetchQueues.getTotalSize());
+          + ", fetchQueues= " + fetchQueues.getQueueCount() +", fetchQueues.totalSize=" + fetchQueues.getTotalSize());
 
       if (!feeder.isAlive() && fetchQueues.getTotalSize() < 5) {
         fetchQueues.dump();
