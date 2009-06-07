@@ -76,7 +76,7 @@ public class TableUtil {
     }
 
     /* add path */
-    if ('/' !=file.charAt(0)) {
+    if (file.length() == 0 || '/' !=file.charAt(0)) {
       buf.append('/');
     }
     buf.append(file);
