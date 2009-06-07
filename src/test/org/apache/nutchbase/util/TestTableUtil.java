@@ -1,8 +1,6 @@
 package org.apache.nutchbase.util;
 
 import org.apache.nutchbase.util.hbase.TableUtil;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import junit.framework.TestCase;
 
 public class TestTableUtil extends TestCase {
