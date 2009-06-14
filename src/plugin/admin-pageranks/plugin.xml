@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin
+   id="admin-pageranks"
+   name="Administration Nutch - Google Pageranks Fetching"
+   version="1.0"
+   provider-name="org.apache.nutch">
+
+   
+   <runtime>
+     <library name="admin-pageranks.jar">
+        <export name="*"/>
+     </library>
+        <library name="conf">
+        <export name="*"/>
+     </library>
+     
+   </runtime>
+
+   <extension point="org.apache.nutch.admin.GuiComponent"
+              id="org.apache.nutch.admin.GuiComponent"
+              name="Administration Nutch Pageranks">
+
+      <implementation class="org.apache.nutch.admin.DefaultGuiComponent"
+                      id="org.apache.nutch.admin.DefaultGuiComponent">
+        <parameter name="isInstanceComponent"  value="true"/>
+        <parameter name="jspFolder"  value="jsp"/>
+        <parameter name="tabName"  value="tabname"/>
+        <parameter name="bundle"  value="locale.admin-pageranks"/>
+      </implementation>
+      
+   </extension>
+   
+</plugin>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin
+   id="admin-scores"
+   name="Administration Nutch Scores"
+   version="1.0"
+   provider-name="org.apache.nutch">
+
+   
+   <runtime>
+     <library name="admin-scores.jar">
+        <export name="*"/>
+     </library>
+        <library name="conf">
+        <export name="*"/>
+     </library>
+     
+   </runtime>
+
+   <extension point="org.apache.nutch.admin.GuiComponent"
+              id="org.apache.nutch.admin.GuiComponent"
+              name="Administration Nutch Scores">
+
+      <implementation class="org.apache.nutch.admin.DefaultGuiComponent"
+                      id="org.apache.nutch.admin.DefaultGuiComponent">
+        <parameter name="isInstanceComponent"  value="true"/>
+        <parameter name="jspFolder"  value="jsp"/>
+        <parameter name="tabName"  value="tabname"/>
+        <parameter name="bundle"  value="locale.admin-scores"/>
+      </implementation>
+      
+   </extension>
+   
+   <extension id="com.trylog.scoring"
+              name="TrylogScoring"
+              point="org.apache.nutch.scoring.ScoringFilter">
+
+      <implementation id="com.trylog.scoring.TrylogScoringFilter"
+        class="com.trylog.scoring.TrylogScoringFilter" />
+   </extension>
+</plugin>

@@ -1,0 +1,77 @@
+input {font-size:9pt;}
+a {color:#FF9B00;}
+a:hover {color:#000000;}
+
+.headline {  
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight:bold;
+	color:#FF9B00;
+	font-size:16pt;
+}
+
+.notice {  
+	font-family: Arial, Helvetica, sans-serif;
+	color:#FF9B00;
+	font-size:10pt;
+}
+
+.table {
+	border: 1px;
+	border-style:solid;
+	border-color:#959595;
+	padding:5x;
+}
+
+.tableHead {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight:bold;
+	color:#FFFFFF;
+	font-size:10pt;
+	background-color:#959595;
+	padding-left:20px;
+	padding-top:3px;
+	padding-bottom:3px;	
+}
+
+.tableCellWhite {
+	font-family: Arial, Helvetica, sans-serif;
+	color:#000000;
+	font-size:9pt;
+	background-color:#FFFFFF;
+	padding:2px;
+}
+
+.tableCellGrey {
+	font-family: Arial, Helvetica, sans-serif;
+	color:#000000;
+	font-size:9pt;
+	background-color:#F4F4F4;
+	padding:2px;
+}
+
+td.tab {
+	background-color:#FF9B00;
+	color:#FFFFFF;
+	line-height:22px;
+	white-space:nowrap;
+}
+
+a.tab {
+	font-family: Arial, Helvetica, sans-serif;
+	color:#FFFFFF;
+	text-decoration:none;
+	font-size:10pt;
+}
+
+a.tab:hover {
+	color:#000000;
+}
+
+.progressbar {
+	border:1px;
+	border-style:solid;
+	border-color:#959595;
+	padding:0;
+	spacing:0;
+	background-color:#CCCCCC;
+}

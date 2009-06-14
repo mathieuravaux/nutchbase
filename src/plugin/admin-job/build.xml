@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+
+<project name="admin-job" default="jar">
+
+  <import file="../build-plugin.xml" />
+
+  <target name="deploy">
+    <mkdir dir="${deploy.dir}" />
+    <copy file="plugin.xml" todir="${deploy.dir}" preservelastmodified="true" />
+    <copy todir="${deploy.dir}" flatten="true">
+      <fileset refid="lib.jars" />
+    </copy>
+    <copy todir="${deploy.dir}">
+      <fileset dir="${basedir}">
+        <exclude name="build.xml" />
+      </fileset>
+    </copy>
+  </target>
+</project>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin
+   id="admin-instance"
+   name="Administration Nutch Instances"
+   version="1.0"
+   provider-name="org.apache.nutch">
+
+   
+   <runtime>
+     <library name="conf">
+        <export name="*"/>
+     </library>
+   </runtime>
+
+   <extension point="org.apache.nutch.admin.GuiComponent"
+              id="org.apache.nutch.admin.GuiComponent"
+              name="Administration Instance">
+
+      <implementation class="org.apache.nutch.admin.DefaultGuiComponent"
+                      id="org.apache.nutch.admin.DefaultGuiComponent">
+        <parameter name="isGeneralComponent"  value="true"/>
+        <parameter name="jspFolder"  value="jsp"/>
+        <parameter name="tabName"  value="tabname"/>
+        <parameter name="bundle"  value="locale.admin-instance"/>
+      </implementation>
+
+   </extension>
+</plugin>

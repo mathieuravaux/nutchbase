@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<project name="admin-management" default="jar">
+
+  <import file="../build-plugin.xml" />
+
+  <target name="deps-test">
+    <copy todir="${deploy.dir}">
+      <fileset dir="${basedir}">
+        <exclude name="build.xml" />
+        <exclude name="src/**" />
+      </fileset>
+    </copy>
+  </target>
+
+</project>
