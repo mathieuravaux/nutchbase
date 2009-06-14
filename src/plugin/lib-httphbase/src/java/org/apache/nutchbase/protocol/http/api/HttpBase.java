@@ -506,7 +506,6 @@ public abstract class HttpBase implements ProtocolHbase {
   }
   
   protected static void main(HttpBase http, String[] args) throws Exception {
-    @SuppressWarnings("unused")
     boolean verbose = false;
     String url = null;
     

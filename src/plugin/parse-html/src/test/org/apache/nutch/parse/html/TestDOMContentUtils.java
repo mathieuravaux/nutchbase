@@ -238,8 +238,7 @@ public class TestDOMContentUtils extends TestCase {
         } 
       testDOMs[i]= node;
     }
-    try {
-     answerOutlinks = new Outlink[][]{ 
+    answerOutlinks = new Outlink[][]{ 
          {
            new Outlink("http://www.nutch.org", "anchor"),
          },
@@ -292,10 +291,6 @@ public class TestDOMContentUtils extends TestCase {
            new Outlink("http://www.nutch.org/?y=1;somethingelse", "anchor5")
          }
       };
-   
-    } catch (MalformedURLException e) {
-        
-    }
   }
 
   private static boolean equalsIgnoreWhitespace(String s1, String s2) {

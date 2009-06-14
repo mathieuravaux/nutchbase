@@ -360,11 +360,12 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
         if (feed <= 0) {
           // queues are full - spin-wait until they have some free space
           try {
+            LOG.info("-feeder : spin-waiting while queues are full (size=" + size + ", queues.getTotalSize()=" + queues.getTotalSize() );
             Thread.sleep(1000);
           } catch (final Exception e) {};
           continue;
         } else {
-          LOG.debug("-feeding " + feed + " input urls ...");
+          LOG.info("-feeding " + feed + " input urls ...");
           while (feed > 0 && hasMore) {
             try {
               final ImmutableBytesWritable key = new ImmutableBytesWritable();
@@ -400,7 +401,6 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     private final URLNormalizers normalizers;
     private final ProtocolFactoryHbase protocolFactory;
     private final long maxCrawlDelay;
-    @SuppressWarnings("unused")
     private final boolean byIP;
     private final int maxRedirect;
     private String reprUrl;
@@ -428,6 +428,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
 
         while (true) {
           fit = fetchQueues.getFetchItem();
+          // LOG.info("getFetchItem : " + fit);
           if (fit == null) {
             if (feeder.isAlive() || fetchQueues.getTotalSize() > 0) {
               LOG.debug(getName() + " spin-waiting ...");
@@ -466,7 +467,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
                 // unblock
                 fetchQueues.finishFetchItem(fit, true);
                 if (LOG.isDebugEnabled()) {
-                  LOG.debug("Denied by robots.txt: " + fit.url);
+                  LOG.info("Denied by robots.txt: " + fit.url);
                 }
                 output(fit, null, ProtocolStatus.STATUS_ROBOTS_DENIED,
                        CrawlDatumHbase.STATUS_GONE);
@@ -476,7 +477,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
                 if (rules.getCrawlDelay() > maxCrawlDelay) {
                   // unblock
                   fetchQueues.finishFetchItem(fit, true);
-                  LOG.debug("Crawl-Delay for " + fit.url + " too long (" + rules.getCrawlDelay() + "), skipping");
+                  LOG.info("Crawl-Delay for " + fit.url + " too long (" + rules.getCrawlDelay() + "), skipping");
                   output(fit, null, ProtocolStatus.STATUS_ROBOTS_DENIED, CrawlDatumHbase.STATUS_GONE);
                   continue;
                 } else {
@@ -670,7 +671,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
       new FetcherThread(getConf(), i).start();
     }
  // select a timeout that avoids a task timeout
-    final long timeout = getConf().getInt("mapred.task.timeout", 10*60*1000)/2;
+    final long timeout = getConf().getInt("mapred.task.timeout", 10*60*1000)/10;
 
     do {                                          // wait for threads to exit
       try {
@@ -681,8 +682,8 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
       LOG.info("-activeThreads=" + activeThreads + ", spinWaiting=" + spinWaiting.get()
           + ", fetchQueues.totalSize=" + fetchQueues.getTotalSize());
 
-      if (!feeder.isAlive() && fetchQueues.getTotalSize() < 5) {
-        fetchQueues.dump();
+      if (/* !feeder.isAlive() && */ fetchQueues.getTotalSize() < 20) {
+          fetchQueues.dump();
       }
       // some requests seem to hang, despite all intentions
       if ((System.currentTimeMillis() - lastRequestStart.get()) > timeout) {

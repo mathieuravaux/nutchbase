@@ -96,4 +96,8 @@
       id="org.apache.nutch.scoring.ScoringFilter"
       name="Nutch Scoring"/>
 
+<extension-point
+      id="org.apache.nutch.admin.GuiComponent"
+      name="Nutch Administration Gui Component"/>      
+
 </plugin>

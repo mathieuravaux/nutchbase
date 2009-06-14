@@ -98,7 +98,7 @@
     <javac 
      encoding="${build.encoding}" 
      srcdir="${src.dir}"
-     includes="org/apache/nutch/**/*.java,org/apache/nutchbase/**/*.java"
+     includes="org/apache/nutch/**/*.java,org/apache/nutchbase/**/*.java,com/trylog/**/*.java"
      destdir="${build.classes}"
      debug="${javac.debug}"
      optimize="${javac.optimize}"
@@ -231,14 +231,6 @@
   <!-- ================================================================== -->
   <target name="pmd" depends="compile">
 	<property name="pmd.report" location="${build.dir}/pmd-report.html" />
-	<taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask">
-	  <classpath>
-		  <fileset dir="${lib.dir}">
-            <include name="pmd-ext/*.jar" />
-            <include name="xerces*.jar" />
-          </fileset>
-	  </classpath>
-	</taskdef>
 	<pmd shortFilenames="true" failonerror="true" failOnRuleViolation="false"
 		 encoding="${build.encoding}" failuresPropertyName="pmd.failures">
 	  <ruleset>unusedcode</ruleset>
@@ -317,7 +309,7 @@
   <!-- ================================================================== -->
   <target name="javadoc" depends="compile">
     <mkdir dir="${build.javadoc}"/>
-    <javadoc
+    <!-- <javadoc
       overview="${src.dir}/overview.html"
       destdir="${build.javadoc}"
       author="true"
@@ -345,8 +337,6 @@
       <packageset dir="${plugins.dir}/parse-js/src/java"/>
       <packageset dir="${plugins.dir}/parse-text/src/java"/>
       <packageset dir="${plugins.dir}/parse-pdf/src/java"/>
-<!--  <packageset dir="${plugins.dir}/parse-rtf/src/java"/> plugin excluded from build due to licensing issues-->
-<!--  <packageset dir="${plugins.dir}/parse-mp3/src/java"/> plugin excluded from build due to licensing issues-->
       <packageset dir="${plugins.dir}/parse-msexcel/src/java"/>
       <packageset dir="${plugins.dir}/parse-mspowerpoint/src/java"/>
       <packageset dir="${plugins.dir}/parse-msword/src/java"/>
@@ -376,12 +366,12 @@
       <link href="${javadoc.link.hadoop}"/>
       
       <classpath refid="classpath"/>
-    	<classpath>
-    		<fileset dir="${plugins.dir}" >
-    			<include name="**/*.jar"/>
-    		</fileset>
-    	</classpath>
-    	
+        <classpath>
+            <fileset dir="${plugins.dir}" >
+                <include name="**/*.jar"/>
+            </fileset>
+        </classpath>
+        
       <group title="Core" packages="org.apache.nutch.*"/>
       <group title="Plugins API" packages="${plugins.api}"/>
       <group title="Protocol Plugins" packages="${plugins.protocol}"/>
@@ -396,9 +386,8 @@
       <group title="Ontology Plugins" packages="${plugins.ontology}"/>
       <group title="Misc. Plugins" packages="${plugins.misc}"/>
     </javadoc>
-    <!-- Copy the plugin.dtd file to the plugin doc-files dir -->
     <copy file="${plugins.dir}/plugin.dtd"
-          todir="${build.javadoc}/org/apache/nutch/plugin/doc-files"/>
+          todir="${build.javadoc}/org/apache/nutch/plugin/doc-files"/> -->
   </target>	
 	
   <target name="default-doc">

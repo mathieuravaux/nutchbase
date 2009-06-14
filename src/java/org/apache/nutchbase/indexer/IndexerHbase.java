@@ -14,6 +14,7 @@ import org.apache.hadoop.hbase.io.RowResult;
 import org.apache.hadoop.hbase.mapred.TableMap;
 import org.apache.hadoop.hbase.mapred.TableMapReduceUtil;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -28,6 +29,7 @@ import org.apache.nutch.indexer.IndexingException;
 import org.apache.nutch.indexer.NutchDocument;
 import org.apache.nutch.indexer.NutchIndexWriterFactory;
 import org.apache.nutch.indexer.lucene.LuceneWriter;
+import org.apache.nutch.indexer.NutchIndexWriter;
 import org.apache.nutch.parse.ParseStatus;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.NutchJob;
@@ -35,12 +37,15 @@ import org.apache.nutch.util.StringUtil;
 import org.apache.nutchbase.util.hbase.ImmutableRowPart;
 import org.apache.nutchbase.util.hbase.TableColumns;
 import org.apache.nutchbase.util.hbase.TableUtil;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.mapred.RecordWriter;
+import org.apache.hadoop.util.Progressable;
 
 public class IndexerHbase 
 extends MapReduceBase
 implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
                   Reducer<ImmutableBytesWritable, ImmutableRowPart,
-                          ImmutableBytesWritable, NutchDocument>{
+                          Text, NutchDocument>{
 
 
   public static final Log LOG = LogFactory.getLog(IndexerHbase.class);
@@ -90,7 +95,7 @@ implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
   
   public void reduce(ImmutableBytesWritable key,
       Iterator<ImmutableRowPart> values,
-      OutputCollector<ImmutableBytesWritable, NutchDocument> output,
+      OutputCollector<Text, NutchDocument> output,
       Reporter reporter) throws IOException {
 
     ImmutableRowPart row = values.next();
@@ -99,7 +104,11 @@ implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
     doc.add("digest", StringUtil.toHexString(row.getSignature()));
     
     String url = TableUtil.unreverseUrl(Bytes.toString(key.get()));
+	  
+	  if (LOG.isTraceEnabled())
+		  LOG.trace("Indexing URL: " + url);
     try {
+		
       doc = filters.filter(doc, url, row);
     } catch (IndexingException e) {
       LOG.warn("Error indexing "+key+": "+e);
@@ -115,7 +124,7 @@ implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
     // store boost for use by explain and dedup
     doc.add("boost", Float.toString(boost));
     
-    output.collect(key, doc);
+    output.collect(new Text(key.get()), doc);
   }
   
   private Set<String> getColumnSet(JobConf job) {
@@ -167,4 +176,5 @@ implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
     int res = ToolRunner.run(NutchConfiguration.create(), new IndexerHbase(), args);
     System.exit(res);
   }
-}
+	  
+  }

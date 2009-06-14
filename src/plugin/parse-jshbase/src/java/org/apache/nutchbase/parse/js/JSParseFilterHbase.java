@@ -90,7 +90,6 @@ public class JSParseFilterHbase implements HtmlParseFilterHbase, ParserHbase {
     if (n instanceof Element) {
       String name = n.getNodeName();
       if (name.equalsIgnoreCase("script")) {
-        @SuppressWarnings("unused")
         String lang = null;
         Node lNode = n.getAttributes().getNamedItem("language");
         if (lNode == null) lang = "javascript";
