@@ -193,7 +193,9 @@ implements Tool {
       OutputCollector<ImmutableBytesWritable, BatchUpdate> output,
       Reporter reporter)
   throws IOException {
-    output.collect(key, values.next().makeBatchUpdate());
+	RowPart row = values.next();
+    row.deleteMeta(FetcherHbase.TMP_PARSE_MARK);
+    output.collect(key, row.makeBatchUpdate());
   }
 
   public void parse(String table) throws IOException {

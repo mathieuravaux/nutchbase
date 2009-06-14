@@ -181,6 +181,7 @@
         <include name="lucene*.jar"/>
         <include name="taglibs-*.jar"/>
         <include name="hadoop-*.jar"/>
+        <include name="hbase*.jar"/>
         <include name="dom4j-*.jar"/>
         <include name="xerces-*.jar"/>
         <include name="tika-*.jar"/>
@@ -215,7 +216,7 @@
     <javac 
      encoding="${build.encoding}" 
      srcdir="${test.src.dir}"
-     includes="org/apache/nutch/**/*.java"
+     includes="org/apache/nutch*/**/*.java"
      destdir="${test.build.classes}"
      debug="${javac.debug}"
      optimize="${javac.optimize}"

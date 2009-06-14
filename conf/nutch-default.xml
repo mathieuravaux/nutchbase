@@ -887,11 +887,11 @@
 <property>
   <name>plugin.includes</name>
  <value>admin-(configuration|crawldb-status|scores|inject|listing|management|instance)|protocol-httphbase|urlfilter-regex|parse-(htmlhbase|jshbase)|index-(basichbase|anchor)|query-(basic|site|url)|response-(json|xml)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)</value>
-  <description>
-  |crawldb-status
-  |scores
-  
-  Regular expression naming plugin directory names to
+<description>
+|crawldb-status
+|scores
+
+Regular expression naming plugin directory names to
   include.  Any plugin not matching this expression is excluded.
   In any case you need at least include the nutch-extensionpoints plugin. By
   default Nutch includes crawling just HTML and plain text via HTTP,
@@ -970,6 +970,13 @@
   for most people would be "img,script,link".</description>
 </property>
 
+<property>
+  <name>parser.html.outlinks.ignore_nofollow</name>
+  <value>false</value>
+  <description>Boolean value instructing the parser to ignore nofollow
+  directives on pages and includes them in outlinks. Defaults to false, 
+  which honors the nofollow and does not include them in outlinks</description>
+</property>
 
 <!-- urlfilter plugin properties -->
 

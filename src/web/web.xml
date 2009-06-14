@@ -22,8 +22,13 @@
 
 <!-- order is very important here -->
 
+<context-param>
+  <param-name>org.apache.nutchbase.webtable</param-name>
+  <param-value>webtable</param-value>
+</context-param>
+
 <listener>
-  <listener-class>org.apache.nutch.searcher.NutchBean$NutchBeanConstructor</listener-class>
+  <listener-class>org.apache.nutchbase.searcher.NutchBeanHbase$NutchBeanConstructor</listener-class>
 </listener>
 
 <servlet>

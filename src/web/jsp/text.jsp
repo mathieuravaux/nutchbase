@@ -21,6 +21,7 @@
   import="java.util.*"
 
   import="org.apache.nutch.searcher.*"
+  import="org.apache.nutchbase.searcher.*"
   import="org.apache.nutch.parse.ParseText"
   import="org.apache.hadoop.conf.Configuration"
   import="org.apache.nutch.util.NutchConfiguration"
@@ -29,7 +30,7 @@
 
   // show the content of a hit as plain text
   Configuration nutchConf = NutchConfiguration.get(application);
-  NutchBean bean = NutchBean.get(application, nutchConf);
+  NutchBeanHbase bean = NutchBeanHbase.get(application, nutchConf);
 
   bean.LOG.info("text request from " + request.getRemoteAddr());
 
@@ -37,7 +38,7 @@
                     Integer.parseInt(request.getParameter("id")));
   HitDetails details = bean.getDetails(hit);
 
-  String text = bean.getParseText(details).getText();
+  String text = bean.getRow(details).getText();
   if (text.trim().equals(""))
     text = null;
 

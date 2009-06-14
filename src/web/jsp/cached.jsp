@@ -21,14 +21,16 @@
   import="java.util.*"
 
   import="org.apache.nutch.searcher.*"
+  import="org.apache.nutchbase.searcher.*"
   import="org.apache.nutch.parse.ParseData"
   import="org.apache.nutch.metadata.Metadata"
   import="org.apache.nutch.metadata.Nutch"
   import="org.apache.hadoop.conf.Configuration"
   import="org.apache.nutch.util.NutchConfiguration"
+  import="org.apache.nutchbase.util.hbase.ImmutableRowPart"
 %><%
   Configuration nutchConf = NutchConfiguration.get(application);
-  NutchBean bean = NutchBean.get(application, nutchConf);
+  NutchBeanHbase bean = NutchBeanHbase.get(application, nutchConf);
   bean.LOG.info("cache request from " + request.getRemoteAddr());
   Hit hit = new Hit(Integer.parseInt(request.getParameter("idx")),
                     request.getParameter("id"));
@@ -39,28 +41,28 @@
     ResourceBundle.getBundle("org.nutch.jsp.cached", request.getLocale())
     .getLocale().getLanguage();
 
-  Metadata metaData = bean.getParseData(details).getContentMeta();
+  ImmutableRowPart row = bean.getRow(details);
 
   String content = null;
-  String contentType = (String) metaData.get(Metadata.CONTENT_TYPE);
+  String contentType = row.getContentType();//(String) metaData.get(Metadata.CONTENT_TYPE);
   if (contentType.startsWith("text/html")) {
     // FIXME : it's better to emit the original 'byte' sequence 
     // with 'charset' set to the value of 'CharEncoding',
     // but I don't know how to emit 'byte sequence' in JSP.
     // out.getOutputStream().write(bean.getContent(details)) may work, 
     // but I'm not sure.
-    String encoding = (String) metaData.get("CharEncodingForConversion"); 
+    String encoding = (String) row.getMetaAsString("CharEncodingForConversion"); 
     if (encoding != null) {
       try {
-        content = new String(bean.getContent(details), encoding);
+        content = new String(row.getContent(), encoding);
       }
       catch (UnsupportedEncodingException e) {
         // fallback to windows-1252
-        content = new String(bean.getContent(details), "windows-1252");
+        content = new String(row.getContent(), "windows-1252");
       }
     }
     else 
-      content = new String(bean.getContent(details));
+      content = new String(row.getContent());
   }
 %>
 <!--
