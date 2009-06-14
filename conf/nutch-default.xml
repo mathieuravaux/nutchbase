@@ -48,7 +48,7 @@
 
 <property>
   <name>http.agent.name</name>
-  <value></value>
+  <value>Agentname</value>
   <description>HTTP 'User-Agent' request header. MUST NOT be empty - 
   please set this to a single word uniquely related to your organization.
 
@@ -67,7 +67,7 @@
 
 <property>
   <name>http.robots.agents</name>
-  <value>*</value>
+  <value>Agentname,*</value>
   <description>The agent strings we'll look for in robots.txt files,
   comma-separated, in decreasing order of precedence. You should
   put the value of http.agent.name as the first agent name, and keep the
@@ -86,7 +86,7 @@
 
 <property>
   <name>http.agent.description</name>
-  <value></value>
+  <value>Agent desc</value>
   <description>Further description of our bot- this text is used in
   the User-Agent header.  It appears in parenthesis after the agent name.
   </description>
@@ -94,7 +94,7 @@
 
 <property>
   <name>http.agent.url</name>
-  <value></value>
+  <value>Agent url</value>
   <description>A URL to advertise in the User-Agent header.  This will 
    appear in parenthesis after the agent name. Custom dictates that this
    should be a URL of a page explaining the purpose and behavior of this
@@ -104,7 +104,7 @@
 
 <property>
   <name>http.agent.email</name>
-  <value></value>
+  <value>Agent email</value>
   <description>An email address to advertise in the HTTP 'From' request
    header and User-Agent header. A good practice is to mangle this
    address (e.g. 'info at example dot com') to avoid spamming.
@@ -120,7 +120,7 @@
 
 <property>
   <name>http.agent.host</name>
-  <value></value>
+  <value>localhost</value>
   <description>Name or IP address of the host on which the Nutch crawler
   would be running. Currently this is used by 'protocol-httpclient'
   plugin.
@@ -322,7 +322,7 @@
 
 <property>
   <name>db.fetch.schedule.class</name>
-  <value>org.apache.nutch.crawl.DefaultFetchSchedule</value>
+  <value>org.apache.nutchbase.crawl.DefaultFetchScheduleHbase</value>
   <description>The implementation of fetch schedule. DefaultFetchSchedule simply
   adds the original fetchInterval to the last fetch time, regardless of
   page changes.</description>
@@ -471,7 +471,7 @@
 
 <property>
   <name>db.signature.class</name>
-  <value>org.apache.nutch.crawl.MD5Signature</value>
+  <value>org.apache.nutchbase.crawl.MD5SignatureHbase</value>
   <description>The default implementation of a page signature. Signatures
   created with this implementation will be used for duplicate detection
   and removal.</description>
@@ -560,7 +560,7 @@
 
 <property>
   <name>fetcher.threads.fetch</name>
-  <value>10</value>
+  <value>50</value>
   <description>The number of FetcherThreads the fetcher should use.
     This is also determines the maximum number of requests that are 
     made at once (each FetcherThread handles one connection).</description>
@@ -568,7 +568,7 @@
 
 <property>
   <name>fetcher.threads.per.host</name>
-  <value>1</value>
+  <value>50</value>
   <description>This number is the maximum number of threads that
     should be allowed to access a host at one time.</description>
 </property>
@@ -886,8 +886,12 @@
 
 <property>
   <name>plugin.includes</name>
-  <value>protocol-http|urlfilter-regex|parse-(text|html|js)|index-(basic|anchor)|query-(basic|site|url)|response-(json|xml)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)</value>
-  <description>Regular expression naming plugin directory names to
+ <value>admin-(configuration|crawldb-status|scores|inject|listing|management|instance)|protocol-httphbase|urlfilter-regex|parse-(htmlhbase|jshbase)|index-(basichbase|anchor)|query-(basic|site|url)|response-(json|xml)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)</value>
+  <description>
+  |crawldb-status
+  |scores
+  
+  Regular expression naming plugin directory names to
   include.  Any plugin not matching this expression is excluded.
   In any case you need at least include the nutch-extensionpoints plugin. By
   default Nutch includes crawling just HTML and plain text via HTTP,
