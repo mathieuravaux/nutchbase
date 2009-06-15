@@ -73,7 +73,7 @@ implements Tool {
     normalizers = new URLNormalizers(job, URLNormalizers.SCOPE_OUTLINK);
     final int maxOutlinksPerPage = job.getInt("db.max.outlinks.per.page", 100);
     maxOutlinks = (maxOutlinksPerPage < 0) ? Integer.MAX_VALUE
-                                           : maxOutlinksPerPage;
+        : maxOutlinksPerPage;
     ignoreExternalLinks = job.getBoolean("db.ignore.external.links", false);
 
   }
@@ -116,12 +116,12 @@ implements Tool {
         String newUrl = pstatus.getMessage();
         final int refreshTime = Integer.parseInt(pstatus.getArgs()[1]);
         newUrl = normalizers.normalize(newUrl,
-                                       URLNormalizers.SCOPE_FETCHER);
+            URLNormalizers.SCOPE_FETCHER);
         try {
           newUrl = filters.filter(newUrl);
           if (newUrl == null || newUrl.equals(url)) {
             final String reprUrl = URLUtil.chooseRepr(url, newUrl,
-                                 refreshTime < Fetcher.PERM_REFRESH_TIME);
+                refreshTime < Fetcher.PERM_REFRESH_TIME);
             final String reversedUrl = TableUtil.reverseUrl(reprUrl);
             final ImmutableBytesWritable newKey =
               new ImmutableBytesWritable(reversedUrl.getBytes());
@@ -193,7 +193,7 @@ implements Tool {
       OutputCollector<ImmutableBytesWritable, BatchUpdate> output,
       Reporter reporter)
   throws IOException {
-	RowPart row = values.next();
+    RowPart row = values.next();
     row.deleteMeta(FetcherHbase.TMP_PARSE_MARK);
     output.collect(key, row.makeBatchUpdate());
   }
