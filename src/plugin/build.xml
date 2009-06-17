@@ -30,9 +30,10 @@
       <ant dir="admin-listing" target="deploy"/>
       <ant dir="admin-configuration" target="deploy"/>
       <ant dir="admin-inject" target="deploy"/>
-      <ant dir="admin-management" target="deploy"/>
-      <ant dir="admin-system" target="deploy"/>
-      <ant dir="admin-job" target="deploy"/>
+      <ant dir="admin-index" target="deploy"/>
+      <!-- <ant dir="admin-management" target="deploy"/>-->
+      <!-- <ant dir="admin-system" target="deploy"/>-->
+      <!-- <ant dir="admin-job" target="deploy"/>-->
      <!-- <ant dir="admin-scheduling" target="deploy"/> -->
       <ant dir="admin-crawldb-status" target="deploy"/>
       <ant dir="admin-scores" target="deploy"/>
@@ -150,6 +151,7 @@
             <ant dir="admin-listing" target="clean"/>
             <ant dir="admin-configuration" target="clean"/>
             <ant dir="admin-inject" target="clean"/>
+            <ant dir="admin-index" target="clean"/>
             <ant dir="admin-management" target="clean"/>
             <ant dir="admin-system" target="clean"/>
             <ant dir="admin-job" target="clean"/>

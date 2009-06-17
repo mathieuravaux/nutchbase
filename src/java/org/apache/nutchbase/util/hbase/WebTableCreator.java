@@ -59,6 +59,9 @@ public int run(String[] args) throws Exception {
     desc.addFamily(new HColumnDescriptor(TableColumns.HEADERS));
     desc.addFamily(new HColumnDescriptor(TableColumns.METADATA));
 
+    desc.addFamily(new HColumnDescriptor(TableColumns.PAGERANK));
+    desc.addFamily(new HColumnDescriptor(TableColumns.VOTES));
+
     // Hackish solution to access previous versions of some columns
     desc.addFamily(new HColumnDescriptor(TableColumns.PREV_SIGNATURE));
     desc.addFamily(new HColumnDescriptor(TableColumns.PREV_FETCH_TIME));

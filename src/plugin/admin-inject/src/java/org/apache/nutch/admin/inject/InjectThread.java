@@ -17,38 +17,42 @@
 package org.apache.nutch.admin.inject;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HTable;
+
 import java.io.IOException;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.nutch.admin.TaskThread;
 import org.apache.nutch.crawl.Injector;
+import org.apache.nutchbase.crawl.InjectorHbase;
 
 /**
  * Runs a injections task
  */
 public class InjectThread extends TaskThread {
 
-  private Path fCrawldb;
+  private String tableName;
 
   private Path fUrlFolder;
 
-  private Injector fInjector;
+  private InjectorHbase fInjector;
 
   private static final Logger LOG = Logger.getLogger(InjectThread.class.getName());
 
   public InjectThread(Configuration configuration, Path urlFolder) {
     super(configuration);
-    this.fInjector = new Injector(configuration);
-	Path crawlDir = new Path(configuration.get("crawl.dir"));
-    this.fCrawldb = new Path(crawlDir, "crawldb");
+    this.fInjector = new InjectorHbase();
+    this.fInjector.setConf(configuration);
+	this.tableName = "webtable";
     this.fUrlFolder = urlFolder;
   }
 
   public void run() {
     try {
       this.fMessage = "inject.running";
-      this.fInjector.inject(this.fCrawldb, this.fUrlFolder);
+      this.fInjector.inject(this.tableName, this.fUrlFolder);
     } catch (IOException e) {
       LOG.warning(e.toString());
       this.fMessage = e.toString();

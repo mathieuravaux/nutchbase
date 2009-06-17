@@ -126,6 +126,24 @@ public class ImmutableRowPart implements Writable, TableColumns {
     return TableUtil.toFloat(rowResult.get(SCORE).getValue());
   }
 
+  public float getPagerank() {
+	Cell PR = rowResult.get(PAGERANK);
+	if (PR != null) {
+		return TableUtil.toFloat(PR.getValue());
+	} else {
+		return 0.0f;
+	}
+  }
+
+  public float getVotes() {
+	Cell votes = rowResult.get(VOTES);
+	if (votes != null) {
+		return TableUtil.toFloat(votes.getValue());
+	} else {
+		return 0.0f;
+	}
+	
+  }
   public byte[] getContent() {
     return rowResult.get(CONTENT).getValue();
   }

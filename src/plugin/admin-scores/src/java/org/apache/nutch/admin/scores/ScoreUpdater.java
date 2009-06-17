@@ -12,6 +12,12 @@ import org.apache.log4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Scanner;
+import org.apache.hadoop.hbase.io.BatchUpdate;
+import org.apache.hadoop.hbase.io.RowResult;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.nutch.admin.DefaultGuiComponent;
@@ -19,6 +25,8 @@ import org.apache.nutch.admin.GuiComponent;
 import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.crawl.CrawlDb;
 import org.apache.nutch.util.NutchConfiguration;
+import org.apache.nutchbase.util.hbase.RowPart;
+import org.apache.nutchbase.util.hbase.TableUtil;
 
 
 public class ScoreUpdater extends HttpServlet {
@@ -41,43 +49,32 @@ public class ScoreUpdater extends HttpServlet {
 		configuration = conf; 
 	}
 	
-	
-	private void addModification(Map<String, String[]> params, String name, String meta) {
-		String url = params.get("url")[0];
-		if (!params.containsKey(name)) { return; }
-		float value = Float.valueOf(params.get(name)[0]);
-		List<Modification> modifs = UrlsToModify.get(url);
-		if(modifs == null) {
-			modifs = new ArrayList<Modification>();
-			UrlsToModify.put(url, modifs);
-		}
-		for(int i=0; i < modifs.size(); i++) {
-			if(modifs.get(i).meta.equals(meta)) {
-				modifs.get(i).newValue = value;
-				return;
-			}
-		}
-		modifs.add( new Modification(meta, value));
-	}
-	
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		PrintWriter out = resp.getWriter();
 		Map<String, String[] > params = req.getParameterMap();
-		String url = (String)(params.get("url")[0]);
 		
-		LOG.info("URL for metas modification : " + url);
+		String url = (String)req.getParameter("url");
+		String reversedUrl = TableUtil.reverseUrl(url);
+		System.out.println("URL for metas modification : " + url);
 		
-		addModification(params, PAGERANK_PARAM, Modification.META_PAGERANK);
-		addModification(params, VOTES_PARAM, Modification.META_VOTES);
+		String PR_ = (String)req.getParameter(PAGERANK_PARAM);
+		String votes_ = (String)req.getParameter(VOTES_PARAM);
+		HTable table = new HTable(new HBaseConfiguration(), "webtable");
 		
-		System.out.println("Modifications for '" + url + "'");
-		for (Modification m : UrlsToModify.get(url)) {
-			System.out.println("\t - " + m.meta + " -> " + m.newValue);
+		RowPart row = new RowPart( table.getRow(reversedUrl) );
+		if (PR_ != null) {
+			float PR = Float.valueOf(PR_);
+			System.out.println("PR :" + PR);
+			row.setPagerank(PR);		
 		}
+		if (votes_ != null) {
+			float votes = Float.valueOf(votes_);
+			System.out.println("votes :" + votes);
+			row.setVotes(votes);		
+		}
+		table.commit(row.makeBatchUpdate());
 		
-		getServletContext().setAttribute(URLS_TO_MODIFY, UrlsToModify);
-		
-		out.println("{ \"success\": true, \"urlsToModify\" : " + UrlsToModify.size() + " }");
+		out.println("{ \"success\": true }");
 		
 	}
 
@@ -90,44 +87,6 @@ public class ScoreUpdater extends HttpServlet {
 	throws ServletException, IOException {
 		resp.setContentType("text/html");
 		PrintWriter out = resp.getWriter();
-		if(req.getParameter("confirmModifications") == null) {
-			out.println("confirmModifications param was not given. Skipping modifications...");
-			return;
-		}
-		
-		GuiComponent component = (GuiComponent) getServletContext().getAttribute("component");
-		Path instanceFolder = component.getNutchInstance().getInstanceFolder();
-		
-		out.println("<html><head>Score update job</head><body><h3>Scores Job Running</h3><p>");
-		out.flush();
-		
-		if(UrlsToModify.size() == 0) {
-			out.println("Nothing to do, quitting.");
-			return;
-		}
-		
-		out.println("Creating url update thread...<br>");
-		ScoresUpdateThread thread = new ScoresUpdateThread(configuration, instanceFolder, UrlsToModify);
-		out.println("Starting url updates...<br>");
-		String msg = "";
-		getServletContext().setAttribute("forceReload", true);
-		thread.start();
-		while(true) {
-			try { Thread.sleep(1000); out.print("."); out.flush(); } catch (InterruptedException e) { }; 
-			if(!msg.equals(thread.getMessage())) {
-				out.println("<br>");
-				msg = thread.getMessage();
-				out.println(msg + "<br>");
-				
-			}
-			if(!thread.isAlive()) {
-				out.println("<br>");
-				out.println("Job terminated.<br>");
-				out.println("Final message : " + thread.getMessage() + "<br>");
-				break;
-			}
-		}
-		getServletContext().setAttribute("forceReload", true);
 	}
 	
 

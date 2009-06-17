@@ -114,8 +114,8 @@ public class NutchBeanHbase
             if (fs.exists(luceneConfig) || fs.exists(solrConfig)) {
                 searchBean = new DistributedSearchBean(conf, luceneConfig, solrConfig);
             } else {
-                final Path indexDir = new Path(dir, "index");
-                final Path indexesDir = new Path(dir, "indexes");
+                final Path indexDir = new Path(dir, "index_merged");
+                final Path indexesDir = new Path(dir, "index");
                 searchBean = new LuceneSearchBean(conf, indexDir, indexesDir);
             }
             table = new HTable(tablename);
@@ -371,7 +371,7 @@ public class NutchBeanHbase
         public ImmutableRowPart getRow(HitDetails details) throws IOException {
             String url = details.getValue("url");
             String rowKey = TableUtil.reverseUrl(url);
-            return new ImmutableRowPart(table.getRow(Bytes.toBytes(rowKey), new byte[][]{TableColumns.TEXT, TableColumns.CONTENT, TableColumns.INLINKS, TableColumns.CONTENT_TYPE}));
+            return new ImmutableRowPart(table.getRow(Bytes.toBytes(rowKey), new byte[][]{TableColumns.TEXT, TableColumns.CONTENT, TableColumns.PAGERANK, TableColumns.VOTES, TableColumns.INLINKS, TableColumns.CONTENT_TYPE}));
         }
         
         public void close() throws IOException {

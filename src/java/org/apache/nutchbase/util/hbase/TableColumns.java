@@ -23,6 +23,10 @@ public interface TableColumns {
   public static final String HEADERS_STR          = "headers:";
   public static final String METADATA_STR         = "metadata:";
 
+  public static final String PAGERANK_STR         = "pagerank:";
+  public static final String VOTES_STR            = "votes:";
+  
+  
   // Hackish solution to access previous versions of some columns
   public static final String PREV_SIGNATURE_STR      = "prevSig:";
   public static final String PREV_FETCH_TIME_STR     = "prevFetch:";
@@ -47,6 +51,10 @@ public interface TableColumns {
   public static final byte[] HEADERS           = Bytes.toBytes(HEADERS_STR);
   public static final byte[] METADATA          = Bytes.toBytes(METADATA_STR);
 
+  public static final byte[] PAGERANK          = Bytes.toBytes(PAGERANK_STR);
+  public static final byte[] VOTES             = Bytes.toBytes(VOTES_STR);
+
+  
   // Hackish solution to access previous versions of some columns
   public static final byte[] PREV_SIGNATURE     = Bytes.toBytes(PREV_SIGNATURE_STR);
   public static final byte[] PREV_FETCH_TIME    = Bytes.toBytes(PREV_FETCH_TIME_STR);

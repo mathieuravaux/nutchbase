@@ -297,6 +297,31 @@ public class RowPart extends ImmutableRowPart {
   }
 
   @Override
+  public float getPagerank() {
+    if (!opMap.containsKey(PAGERANK))
+      return super.getPagerank();
+
+    return TableUtil.toFloat(opMap.get(PAGERANK));
+  }
+
+  public void setPagerank(float PR) {
+    opMap.put(PAGERANK, TableUtil.toBytes(PR));
+  }
+
+  @Override
+  public float getVotes() {
+    if (!opMap.containsKey(VOTES))
+      return super.getVotes();
+
+    return TableUtil.toFloat(opMap.get(VOTES));
+  }
+
+  public void setVotes(float votes) {
+    opMap.put(VOTES, TableUtil.toBytes(votes));
+  }
+
+  
+  @Override
   public byte getStatus() {
     if (!opMap.containsKey(STATUS))
       return super.getStatus();

@@ -886,11 +886,8 @@
 
 <property>
   <name>plugin.includes</name>
- <value>admin-(configuration|crawldb-status|scores|inject|listing|management|instance)|protocol-httphbase|urlfilter-regex|parse-(htmlhbase|jshbase)|index-(basichbase|anchor)|query-(basic|site|url)|response-(json|xml)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)</value>
+ <value>admin-(listing|instance|crawldb-status|scores|inject|index|configuration|pageranks)|protocol-httphbase|urlfilter-regex|parse-(htmlhbase|jshbase)|index-(basichbase|anchor)|query-(basic|site|url)|response-(json|xml)|summary-basic|scoring-opic|urlnormalizer-(pass|regex|basic)</value>
 <description>
-|crawldb-status
-|scores
-
 Regular expression naming plugin directory names to
   include.  Any plugin not matching this expression is excluded.
   In any case you need at least include the nutch-extensionpoints plugin. By

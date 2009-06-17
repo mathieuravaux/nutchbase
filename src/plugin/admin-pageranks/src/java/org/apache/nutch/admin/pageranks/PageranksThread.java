@@ -14,6 +14,11 @@ import java.io.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Scanner;
+import org.apache.hadoop.hbase.io.RowResult;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.Text;
@@ -55,6 +60,7 @@ import org.apache.nutch.util.HadoopFSUtil;
 import org.apache.nutch.util.LockUtil;
 import org.apache.nutch.util.NutchConfiguration;
 import org.apache.nutch.util.NutchJob;
+import org.apache.nutchbase.util.hbase.RowPart;
 
 import java.util.ArrayList;
 
@@ -69,37 +75,11 @@ public class PageranksThread  extends TaskThread {
 	
 	public static final int PAGERANK_POLL_DELAY = 800;
 	
-	Path crawlDir;
-	Path crawlDb;
-	boolean crawlDbOpened = false;
-	MapFile.Reader[] readers;
-	Map<String, Float> modificationsMap;
 	Configuration configuration;
-
-	private void open(boolean force) {
-		if(!force && crawlDbOpened) { return; }
-		LOG.info("Opening crawldb... in " + crawlDb);
-
-		try {
-			FileSystem fs = FileSystem.get(configuration);
-			if (fs.exists(crawlDb)) {
-				readers = MapFileOutputFormat.getReaders( fs, new Path(crawlDb, CrawlDb.CURRENT_NAME), configuration );
-			}
-		} catch (IOException e) {
-			LOG.error("CrawlDb opening error : ");
-			LOG.error(org.apache.hadoop.util.StringUtils.stringifyException(e));
-		}
-		LOG.info("CrawlDb opened.");
-		crawlDbOpened = true;
-	}
-
 
 	public PageranksThread(Configuration configuration, Path _instanceFolder, Map<String, Float> modifs) {
 		super(configuration);
 		this.configuration = configuration;  
-		crawlDir = new Path(configuration.get("crawl.dir"));
-		crawlDb = new Path(crawlDir, "crawldb");
-		modificationsMap = modifs;
 	}
 
 	private String log(String msg) {
@@ -116,26 +96,30 @@ public class PageranksThread  extends TaskThread {
 	
 	public void run(){
 		log("Pagerank thread starting...");
-		open(true);
-		
-		Text url = new Text();
-		CrawlDatum datum = new CrawlDatum();
-		
-		for(MapFile.Reader r : Arrays.asList(readers)) {
-			try {
-				while(r.next(url, datum)) {
-					log("url : " + url.toString());
-				    try { Thread.sleep(PAGERANK_POLL_DELAY); } catch (Exception e) {
-				    	fatal("Pagerank job error : \n" + org.apache.hadoop.util.StringUtils.stringifyException(e));
-				    }
+		try {
+			HTable table = new HTable(new HBaseConfiguration(), "webtable");
+			String[] scannedColumns = new String[] {"score:", "pagerank:"};
+			Scanner scanner = table.getScanner(scannedColumns);
+			for (RowResult rowResult : scanner) {
+				RowPart row = new RowPart(rowResult);
+				String url = Bytes.toString(row.getRowId());
+				log("url : " + url.toString());
+				float pagerank = row.getPagerank();
+				if (pagerank == 0.0f) {
+					try {
+						Thread.sleep(PAGERANK_POLL_DELAY);
+					} catch (Exception e) {
+						fatal("Pagerank job error : \n" + org.apache.hadoop.util.StringUtils.stringifyException(e));
+					}
+					table.commit(row.makeBatchUpdate());	
 				}
-			} catch (IOException e) {
-		    	fatal("Pagerank job error : \n" + org.apache.hadoop.util.StringUtils.stringifyException(e));
 			}
+		} catch (IOException e1) {
+			log("Pagerank job error : \n" + org.apache.hadoop.util.StringUtils.stringifyException(e1));
+			System.out.println("Pagerank job error : \n" + org.apache.hadoop.util.StringUtils.stringifyException(e1));
 		}
 		
-		
-	    log("Pagerank thread pass terminated. starting over...");
+		//log("Pagerank thread pass terminated. starting over...");
 	    run();
 	}
 

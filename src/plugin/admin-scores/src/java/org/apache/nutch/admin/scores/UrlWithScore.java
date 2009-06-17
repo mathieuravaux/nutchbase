@@ -43,10 +43,13 @@ import org.apache.nutch.metadata.Nutch;
 import org.apache.nutch.searcher.Hit;
 import org.apache.nutch.searcher.HitDetails;
 import org.apache.nutch.searcher.Hits;
-import org.apache.nutch.searcher.NutchBean;
+//import org.apache.nutch.searcher.NutchBean;
+import org.apache.nutchbase.searcher.NutchBeanHbase;
 import org.apache.nutch.searcher.Query;
 import org.apache.nutch.searcher.Summary;
-import org.apache.nutch.searcher.NutchBean.NutchBeanConstructor;
+//import org.apache.nutch.searcher.NutchBean.NutchBeanConstructor;
+import org.apache.nutchbase.searcher.NutchBeanHbase.NutchBeanConstructor;
+import org.apache.nutchbase.util.hbase.ImmutableRowPart;
 import org.apache.nutch.util.NutchConfiguration;
 
 public class UrlWithScore extends HttpServlet {
@@ -71,7 +74,7 @@ public class UrlWithScore extends HttpServlet {
 		
 		
 		// Get a search bean to display results
-		NutchBean bean = NutchBean.get(getServletContext(), configuration);
+		NutchBeanHbase bean = NutchBeanHbase.get(getServletContext(), configuration);
 		if(getServletContext().getAttribute("forceReload") != null) {
 			LOG.info("Forcing crawlDb reload");
 			LOG.info("Forcing searcher index reload");
@@ -80,8 +83,8 @@ public class UrlWithScore extends HttpServlet {
 			getServletContext().removeAttribute("forceReload");
 		}
 		if(bean == null) {
-			bean = new NutchBean(configuration);
-			getServletContext().setAttribute(NutchBean.KEY, bean);
+			bean = new NutchBeanHbase(configuration, "webtable");
+			getServletContext().setAttribute(NutchBeanHbase.KEY, bean);
 		}
 		System.out.println("Bean : " + bean);
 		
@@ -127,7 +130,7 @@ public class UrlWithScore extends HttpServlet {
 		}
 		LOG.info("total hits: " + hits.getTotal());
 		
-		//HitDetails detail = details[i];
+//		HitDetails detail = details[i];
 		//String title = detail.getValue("title");
 		//String url = detail.getValue("url");
 		//String summary = summaries[i].toHtml(true);
@@ -141,27 +144,17 @@ public class UrlWithScore extends HttpServlet {
 			String url = detail.getValue("url");
 			LOG.debug("#" + i);
 			LOG.debug(detail.getValue("title") + "(" + url + ")");
-			LOG.debug(summaries[i].toString());
+			
 			explanations.add( bean.getExplanation(query2, hit) );
 			
 			LOG.debug("BOOST : " + detail.getValue("boost"));
-			
 			Text key = new Text(url);
-		    //CrawlDatum datum = (CrawlDatum)MapFileOutputFormat.getEntry(readers, new HashPartitioner<Text, CrawlDatum>(), key,  new CrawlDatum());
 		    
-		    //org.apache.hadoop.io.MapWritable meta = datum.getMetaData();
-		    //LOG.debug("Meta-data : " + meta.keySet().toString());
-		    //LOG.debug("Meta : " + meta.values());
-		    
-		    //FloatWritable pagerank = (FloatWritable)meta.get(new Text(Modification.META_PAGERANK));
-		    //FloatWritable nb_votes = (FloatWritable)meta.get(new Text(Modification.META_VOTES));
-			FloatWritable pagerank = null;
-		    FloatWritable nb_votes = null;
-			if(pagerank == null) { pagerank = new FloatWritable((float)0.0); }
-		    if(nb_votes == null) { nb_votes = new FloatWritable((float)0.0); }
-		    pageranks.add(new Float(pagerank.get()));
-		    votes.add(new Float(nb_votes.get()));
-			//LOG.info(bean.getExplanation(query2, hit));
+		    ImmutableRowPart row = bean.getRow(detail);
+		    float PR = row.getPagerank();
+		    pageranks.add(PR);
+		    votes.add(row.getVotes());
+			
 		}
 		
 		// display results

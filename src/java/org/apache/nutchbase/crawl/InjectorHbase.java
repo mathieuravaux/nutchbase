@@ -147,6 +147,8 @@ implements Tool {
       row.setFetchTime(curTime);
       row.setFetchInterval(interval);
       row.setScore(scoreInjected);
+      row.setPagerank(0.0f);
+      row.setVotes(0.0f);
       row.setRetriesSinceFetch(0);
     }
 

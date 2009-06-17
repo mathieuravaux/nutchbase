@@ -8,6 +8,7 @@
 <%@ page import="java.net.URL"%>
 <%@ page import="org.apache.nutch.metadata.Nutch"%>
 <%@ page import="org.apache.nutch.searcher.*"%>
+<%@page import="java.text.DecimalFormat"%>
 
 <%
 GuiComponent component = (GuiComponent) application.getAttribute("component");
@@ -25,25 +26,16 @@ ArrayList explanations = (ArrayList)request.getAttribute("explanations");
 ArrayList pageranks = (ArrayList)request.getAttribute("pageranks");
 ArrayList votes = (ArrayList)request.getAttribute("votes");
 
-ArrayList urlsToModify = (ArrayList)request.getAttribute("urlsToModify");
-int urlsToModifyCount = 0; //domainsToDelete.size();
 %>
 
-<%@page import="java.text.DecimalFormat"%><html>
+<html>
     <head>
         <title>Nutch Scores</title>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
         <link rel="stylesheet" href="css/admingui.css" type="text/css">
     </head>
     <body bgcolor="#FFFFFF" text="#000000">
-    
-        <form style="position:absolute; top:4px; right:4px; background:silver; border:1px solid #ffe; width:120px; text-align:center">
-            <em id="urlsTomodifyCount"><%= urlsToModifyCount%> changement(s)</em>
-            <input style="float:left;" type="button" value="Appliquer ..." onclick="document.location.replace('modify_url/?confirmModifications=1');"></input>
-        </form>
-        
-        <form method="post" action="index.jsp" style="margin-right:200px;">
-            
+        <form method="post" action="index.jsp">
             <p width="100%" border="0">
                 Rechercher : <input name="query" size="80" maxlength="100" type="text" value="<%=query%>">
                 <input type="submit" value="<%=component.getLabel("submit.button", request.getLocale())%>"/>
@@ -74,10 +66,9 @@ int urlsToModifyCount = 0; //domainsToDelete.size();
             float pagerank = (Float)pageranks.get(i);
             float nb_votes = (Float)votes.get(i);
             float boost = Float.valueOf(detail.getValue("boost"));
-            //boolean toModify = urlsToModify.contains(url);
-            boolean toModify = false;
+           
          %>
-         <tr <% if(toModify){ out.print("class='toModify'"); } %> >
+         <tr>
             <td style="position:relative"><img src="img/info.png" class="infobutton"> <div class="explanation"><%=explanation%></div></td>
             <td><%=title%></td>
             <td><a class="url" href="<%=url%>" target="_blank"><%=url%></a></td>
@@ -251,10 +242,7 @@ int urlsToModifyCount = 0; //domainsToDelete.size();
                     url: url,
                     pagerank: pagerank
                 },
-                function(data, textStatus) {
-                    data = eval(data);
-                    $("#urlsTomodifyCount").text( "" + data.urlsToModify + " URLs" );
-                },
+                function(data, textStatus) {},
                 "json");
                 return true;
              };
@@ -267,10 +255,7 @@ int urlsToModifyCount = 0; //domainsToDelete.size();
                 	      url: url,
                           votes: votes
                       },
-                      function(data, textStatus) {
-                          data = eval(data);
-                          $("#urlsTomodifyCount").text( "" + data.urlsToModify + " URLs" );
-                      },
+                      function(data, textStatus) {},
                       "json");
                   return true;
              };

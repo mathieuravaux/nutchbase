@@ -134,7 +134,7 @@ implements Tool, TableMap<ImmutableBytesWritable, ImmutableRowPart>,
     return columnSet;  
   }
   
-  private void index(Path indexDir, String table) throws IOException {
+  public void index(Path indexDir, String table) throws IOException {
     LOG.info("IndexerHbase: starting");
     LOG.info("IndexerHbase: table: " + table);
     
