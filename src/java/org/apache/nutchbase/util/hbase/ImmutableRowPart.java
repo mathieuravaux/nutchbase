@@ -123,7 +123,12 @@ public class ImmutableRowPart implements Writable, TableColumns {
   }
 
   public float getScore() {
-    return TableUtil.toFloat(rowResult.get(SCORE).getValue());
+	Cell score = rowResult.get(SCORE);
+	if (score != null) {
+		return TableUtil.toFloat(score.getValue());
+	} else {
+		return 0.0f;
+	}
   }
 
   public float getPagerank() {
