@@ -31,20 +31,11 @@
     <servlet-class>org.apache.nutch.admin.pageranks.PageranksViewer</servlet-class>
 </servlet>
 
-<servlet>
-    <servlet-name>PageranksUpdater</servlet-name>
-    <servlet-class>org.apache.nutch.admin.pageranks.PageranksUpdater</servlet-class>
-</servlet>
- 
 <servlet-mapping>
 	<servlet-name>PageranksViewer</servlet-name>
 	<url-pattern>/index.jsp</url-pattern>
 </servlet-mapping>
 
-<servlet-mapping>
-    <servlet-name>PageranksUpdater</servlet-name>
-    <url-pattern>/modify_url/</url-pattern>
-</servlet-mapping>
 
 <!--
 <welcome-file-list>
