@@ -48,7 +48,7 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.servlet.WebApplicationContext;
 
 
-import com.sun.xml.internal.ws.transport.http.DeploymentDescriptorParser;
+//import com.sun.xml.internal.ws.transport.http.DeploymentDescriptorParser;
 
 /**
  * Embed {@link Servlet} container.
