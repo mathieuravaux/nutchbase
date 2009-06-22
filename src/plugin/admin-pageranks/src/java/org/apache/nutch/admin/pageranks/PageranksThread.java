@@ -96,6 +96,9 @@ public class PageranksThread  extends TaskThread {
 	
 	public void run(){
 		log("Pagerank thread starting...");
+		
+		PageRankService PRService = new PageRankService();
+
 		try {
 			HTable table = new HTable(new HBaseConfiguration(), "webtable");
 			String[] scannedColumns = new String[] {"score:", "pagerank:"};
@@ -103,15 +106,19 @@ public class PageranksThread  extends TaskThread {
 			for (RowResult rowResult : scanner) {
 				RowPart row = new RowPart(rowResult);
 				String url = Bytes.toString(row.getRowId());
-				log("url : " + url.toString());
 				float pagerank = row.getPagerank();
+				log("url [" + pagerank + "] : " + url);
+				
 				if (pagerank == 0.0f) {
+					float PR = Math.min((float)PRService.getPR(url), 0.1f);
+					log("    ==> Got pagerank : " + PR);
+					row.setPagerank(PR);
+					table.commit(row.makeBatchUpdate());	
 					try {
 						Thread.sleep(PAGERANK_POLL_DELAY);
 					} catch (Exception e) {
 						fatal("Pagerank job error : \n" + org.apache.hadoop.util.StringUtils.stringifyException(e));
 					}
-					table.commit(row.makeBatchUpdate());	
 				}
 			}
 		} catch (IOException e1) {
