@@ -56,9 +56,12 @@ import org.apache.nutchbase.util.hbase.RowPart;
 import org.apache.nutchbase.util.hbase.TableColumns;
 import org.apache.nutchbase.util.hbase.TableUtil;
 
-public class FetcherHbase extends Configured
-implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable, RowPart>,
-           Reducer<ImmutableBytesWritable, RowPart, ImmutableBytesWritable, BatchUpdate>,
+public class FetcherHbase
+extends Configured
+implements MapRunnable<ImmutableBytesWritable, RowResult,
+                       ImmutableBytesWritable, RowPart>,
+           Reducer<ImmutableBytesWritable, RowPart,
+                   ImmutableBytesWritable, BatchUpdate>,
            Tool {
 
   public static final Log LOG = LogFactory.getLog(FetcherHbase.class);
@@ -102,7 +105,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     URL u;
 
     public FetchItem(ImmutableBytesWritable key, RowPart row,
-                     String url, URL u, String queueID) {
+        String url, URL u, String queueID) {
       this.key = key;
       this.row = row;
       this.url = url;
@@ -115,7 +118,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
      * address pair.
      */
     public static FetchItem create(ImmutableBytesWritable key, RowPart row,
-                                   String url, boolean byIP) {
+        String url, boolean byIP) {
       String queueID;
       URL u = null;
       try {
@@ -269,7 +272,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     }
 
     public void addFetchItem(ImmutableBytesWritable key, RowPart row,
-                             String url) {
+        String url) {
       final FetchItem it = FetchItem.create(key, row, url, byIP);
       if (it != null) addFetchItem(it);
     }
@@ -438,7 +441,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
               try {
                 Thread.sleep(500);
               } catch (final Exception e) {}
-                spinWaiting.decrementAndGet();
+              spinWaiting.decrementAndGet();
               continue;
             } else {
               // all done, finish this thread
@@ -471,7 +474,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
                   LOG.info("Denied by robots.txt: " + fit.url);
                 }
                 output(fit, null, ProtocolStatus.STATUS_ROBOTS_DENIED,
-                       CrawlDatumHbase.STATUS_GONE);
+                    CrawlDatumHbase.STATUS_GONE);
                 continue;
               }
               if (rules.getCrawlDelay() > 0) {
@@ -543,7 +546,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
                 if (LOG.isWarnEnabled()) {
                   LOG.warn("Unknown ProtocolStatus: " + status.getCode());
                 }
-                output(fit, null, status, CrawlDatumHbase.STATUS_RETRY);
+              output(fit, null, status, CrawlDatumHbase.STATUS_RETRY);
               }
 
               if (redirecting && redirectCount >= maxRedirect) {
@@ -578,7 +581,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     }
 
     private void handleRedirect(String url, String newUrl,
-                                boolean temp, String redirType)
+        boolean temp, String redirType)
     throws URLFilterException, IOException {
       newUrl = normalizers.normalize(newUrl, URLNormalizers.SCOPE_FETCHER);
       newUrl = urlFilters.filter(newUrl);
@@ -610,7 +613,7 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     }
 
     private void output(FetchItem fit, Content content,
-                        ProtocolStatus pstatus, byte status) {
+        ProtocolStatus pstatus, byte status) {
       try {
         fit.row.setStatus(status);
         final long prevFetchTime = fit.row.getFetchTime();
@@ -645,9 +648,9 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     String status;
     final long elapsed = (System.currentTimeMillis() - start)/1000;
     status = activeThreads + " threads, " +
-      pages+" pages, "+errors+" errors, "
-      + Math.round(((float)pages.get()*10)/elapsed)/10.0+" pages/s, "
-      + Math.round(((((float)bytes.get())*8)/1024)/elapsed)+" kb/s, ";
+    pages+" pages, "+errors+" errors, "
+    + Math.round(((float)pages.get()*10)/elapsed)/10.0+" pages/s, "
+    + Math.round(((((float)bytes.get())*8)/1024)/elapsed)+" kb/s, ";
     reporter.setStatus(status);
   }
 
@@ -671,8 +674,8 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
     for (int i = 0; i < threadCount; i++) {       // spawn threads
       new FetcherThread(getConf(), i).start();
     }
- // select a timeout that avoids a task timeout
-    final long timeout = getConf().getInt("mapred.task.timeout", 10*60*1000)/10;
+    // select a timeout that avoids a task timeout
+    final long timeout = getConf().getInt("mapred.task.timeout", 10*60*1000)/2;
 
     do {                                          // wait for threads to exit
       try {
@@ -710,8 +713,8 @@ implements MapRunnable<ImmutableBytesWritable, RowResult, ImmutableBytesWritable
       Reporter reporter) throws IOException {
     while (values.hasNext()) {
       final RowPart row = values.next();
-	  // remove the fetch-mark  
-	  row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);
+      // remove the fetch-mark  
+      row.deleteMeta(GeneratorHbase.TMP_FETCH_MARK);
       output.collect(key, row.makeBatchUpdate());
     }
   }

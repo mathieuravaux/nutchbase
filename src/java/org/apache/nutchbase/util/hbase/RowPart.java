@@ -3,11 +3,7 @@ package org.apache.nutchbase.util.hbase;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.apache.hadoop.hbase.io.BatchUpdate;
 import org.apache.hadoop.hbase.io.RowResult;
@@ -402,6 +398,18 @@ public class RowPart extends ImmutableRowPart {
     return opMap.get(col) != null; // check if column is deleted
   }
 
+  public void putColumn(byte[] key, byte[] val) {
+      opMap.put(key, val);
+  }
+
+  public void putColumn(String key, String val) {
+      opMap.put(Bytes.toBytes(key), Bytes.toBytes(val));
+  }
+
+  public void deleteColumn(String key) {
+      opMap.put(Bytes.toBytes(key), null);
+  }
+
   @Override
   public boolean hasMeta(String metaKey) {
     return hasColumn(Bytes.toBytes(METADATA_STR + metaKey));
@@ -431,12 +439,26 @@ public class RowPart extends ImmutableRowPart {
   }
 
   @Override
+  public byte[] getColumn(String key) {
+    byte[] bKey = Bytes.toBytes(key);
+    if (opMap.containsKey(bKey))
+      return opMap.get(bKey);
+    return super.getColumn(key);
+  }
+
+  @Override
+  public Set<byte[]> getColumns() {
+    Set<byte[]> columns = new HashSet<byte[]>(super.getColumns());
+    columns.addAll(opMap.keySet());
+    return columns;
+  }
+
+  @Override
   public byte[] getMeta(String metaKey) {
     final String fullKeyString = METADATA_STR + metaKey;
     final byte[] key = Bytes.toBytes(fullKeyString);
     if (!opMap.containsKey(key))
       return super.get(key);
-
     return opMap.get(key);
   }
 
