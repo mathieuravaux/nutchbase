@@ -132,14 +132,16 @@ do {
 } while (to_skip > 0 && rowResult != null);
 
 //System.out.println("Urls skipped");
-
+ImmutableRowPart row;
 do {
     rowResult = scanner.next();
+    row = new ImmutableRowPart(rowResult);
     url = tester.testUrl(rowResult, filterUrl, urlFilter);
     if (url != null) {
 //      System.out.println("url : " + url);
         Byte st = rowResult.get( Bytes.toBytes("status:")).getValue()[0];
-        float score = Bytes.toFloat(rowResult.get( Bytes.toBytes("score:")).getValue());
+        // float score = Bytes.toFloat(rowResult.get( Bytes.toBytes("score:")).getValue());
+        float score = row.getScore();
         CrawlDatum crawlDatum = new CrawlDatum((int)st, 0, score);
         map.put(url, crawlDatum);
         found_urls++;
@@ -156,7 +158,8 @@ request.setAttribute("map", map);
 
 
 %>
-<html>
+
+<%@page import="org.apache.nutchbase.util.hbase.ImmutableRowPart"%><html>
     <head>
         <title>Nutch Crawldb Statistics</title>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
