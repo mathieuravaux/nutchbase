@@ -1,0 +1,216 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+<configuration>
+
+<property>
+<name>admin.gui.port</name>
+<value>80</value>
+</property>
+
+<property>
+    <name>crawl.dir</name>
+    <value>/root/index</value>
+</property>
+<property>
+    <name>searcher.dir</name>
+    <value>${crawl.dir}</value>
+</property>
+<property>
+    <name>urlfilter.blacklist.file</name>
+    <value>${crawl.dir}/blacklist.txt</value>
+</property>
+
+
+ <property>
+    <name>hadoop.tmp.dir</name>
+    <value>/mnt/tmp/hadoop-${user.name}</value>
+ </property>
+
+
+
+<property>
+  <name>http.agent.name</name>
+  <value>Peter Wang</value>
+  <description>Peter Pu Wang
+  </description>
+</property>
+
+<property>
+  <name>http.agent.description</name>
+  <value>Nutch spiderman</value>
+  <description> Nutch spiderman
+  </description>
+</property>
+
+<property>
+  <name>http.agent.url</name>
+  <value>http://peterpuwang.googlepages.com </value>
+  <description>http://peterpuwang.googlepages.com
+  </description>
+</property>
+
+<property>
+  <name>http.agent.email</name>
+  <value>MyEmail</value>
+  <description>peterpuwang@yahoo.com
+  </description>
+</property>
+    
+
+
+ <!--
+ <property>
+    <name>hbase.client.pause</name>
+    <value>300</value>
+ </property>
+
+ <property>
+    <name>hbase.client.retries.number</name>
+    <value>2</value>
+ </property>
+ -->
+
+<property>
+    <name>db.fetch.schedule.class</name>
+    <value>org.apache.nutchbase.crawl.DefaultFetchScheduleHbase</value>
+</property>
+
+<property>
+    <name>mapred.job.reuse.jvm.num.tasks</name>
+    <value>-1</value>
+</property>
+
+
+
+
+
+
+
+<!-- Tuning of the fetcher -->
+
+<property>
+  <name>db.fetch.retry.max</name>
+  <value>3</value>
+  <description>The maximum number of times a url that has encountered
+  recoverable errors is generated for fetch.</description>
+</property>
+
+<property>
+  <name>db.ignore.external.links</name>
+  <value>true</value>
+  <description>If true, outlinks leading from a page to external hosts
+  will be ignored. This is an effective way to limit the crawl to include
+  only initially injected hosts, without creating complex URLFilters.
+  </description>
+</property>
+
+
+<property>
+  <name>http.timeout</name>
+  <value>1500</value>
+  <description>The default network timeout, in milliseconds.</description>
+</property>
+
+
+<property>
+  <name>http.redirect.max</name>
+  <value>5</value>
+  <description>The maximum number of redirects the fetcher will follow when
+  trying to fetch a page. If set to negative or 0, fetcher won't immediately
+  follow redirected URLs, instead it will record them for later fetching.
+  </description>
+</property>
+
+<property>
+  <name>http.max.delays</name>
+  <value>3</value>
+  <description>The number of times a thread will delay when trying to
+  fetch a page.  Each time it finds that a host is busy, it will wait
+  fetcher.server.delay.  After http.max.delays attepts, it will give
+  up on the page for now.</description>
+</property>
+
+
+<property>
+  <name>http.verbose</name>
+  <value>false</value>
+  <description>If true, HTTP will log more verbosely.</description>
+</property>
+
+
+
+
+<property>
+  <name>fetcher.server.delay</name>
+  <value>3.0</value>
+  <description>The number of seconds the fetcher will delay between 
+   successive requests to the same server.</description>
+</property>
+
+<property>
+  <name>fetcher.server.min.delay</name>
+  <value>3.0</value>
+  <description>The minimum number of seconds the fetcher will delay between 
+  successive requests to the same server. This value is applicable ONLY
+  if fetcher.threads.per.host is greater than 1 (i.e. the host blocking
+  is turned off).</description>
+</property>
+
+<property>
+ <name>fetcher.max.crawl.delay</name>
+ <value>3</value>
+ <description>
+ If the Crawl-Delay in robots.txt is set to greater than this value (in
+ seconds) then the fetcher will skip this page, generating an error report.
+ If set to -1 the fetcher will never skip such pages and will wait the
+ amount of time retrieved from robots.txt Crawl-Delay, however long that
+ might be.
+ </description>
+</property> 
+
+<property>
+  <name>fetcher.threads.fetch</name>
+  <value>5000</value>
+  <description>The number of FetcherThreads the fetcher should use.
+    This is also determines the maximum number of requests that are 
+    made at once (each FetcherThread handles one connection).</description>
+</property>
+
+<property>
+  <name>fetcher.threads.per.host</name>
+  <value>1</value>
+  <description>This number is the maximum number of threads that
+    should be allowed to access a host at one time.</description>
+</property>
+
+<property>
+  <name>fetcher.threads.per.host.by.ip</name>
+  <value>false</value>
+  <description>If true, then fetcher will count threads by IP address,
+  to which the URL's host name resolves. If false, only host name will be
+  used. NOTE: this should be set to the same value as
+  "generate.max.per.host.by.ip" - default settings are different only for
+  reasons of backward-compatibility.</description>
+</property>
+
+<property>
+  <name>fetcher.verbose</name>
+  <value>true</value>
+  <description>If true, fetcher will log more verbosely.</description>
+</property>
+
+
+
+<!-- Tuning of the generator  -->
+
+<property>
+  <name>generate.max.per.host</name>
+  <value>3</value>
+  <description>The maximum number of urls per host in a single
+  fetchlist.  -1 if unlimited.</description>
+</property>
+
+
+</configuration>
