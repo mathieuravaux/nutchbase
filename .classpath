@@ -112,7 +112,6 @@
 	<classpathentry kind="lib" path="lib/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-api-1.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/hadoop-0.19.1-core.jar"/>
-	<classpathentry kind="lib" path="lib/hbase-0.19.1.jar" sourcepath="/Users/Mathieu/hbase/src/java"/>
 	<classpathentry kind="lib" path="lib/icu4j-4_0_1.jar"/>
 	<classpathentry kind="lib" path="lib/jakarta-oro-2.0.8.jar"/>
 	<classpathentry kind="lib" path="lib/jets3t-0.6.1.jar"/>
@@ -166,5 +165,6 @@
 	<classpathentry kind="lib" path="src/plugin/urlfilter-automaton/lib/automaton.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/xalan.jar"/>
+	<classpathentry kind="lib" path="lib/hbase-0.19.3.jar"/>
 	<classpathentry kind="output" path="bin/tmp_build"/>
 </classpath>

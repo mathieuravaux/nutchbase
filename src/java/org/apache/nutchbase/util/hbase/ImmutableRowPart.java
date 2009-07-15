@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.io.Cell;
 import org.apache.hadoop.hbase.io.HbaseMapWritable;
@@ -218,8 +219,7 @@ public class ImmutableRowPart implements Writable, TableColumns {
     return stringify(rowResult.get(headerKey));
   }
 
-  /** Checks if a metadata key exists in "metadata" column.
-   * @param row Row from hbase
+  /** Checks if a metadata key exists in "metadata" column.  
    * @param metaKey Key to search in metadata column
    * @return true if key exists
    */
@@ -245,4 +245,31 @@ public class ImmutableRowPart implements Writable, TableColumns {
     return val == null ? null : Bytes.toString(val);
   }
 
+ /**
+  * Reads a value from an abitrary row
+  * @param key the String key name
+  * @return the value as a byte array null if there is no value for the key.
+  */
+  public byte[] getColumn(String key) {
+    final byte[] headerKey = Bytes.toBytes(key);
+    if (!hasColumn(headerKey)) {
+      return null;
+    }
+    return rowResult.get(Bytes.toBytes(key)).getValue();
+  }
+
+
+  public Set<byte[]> getColumns() {
+      return rowResult.keySet();
+  }
+
+  /**
+  * Reads a value from an abitrary row
+  * @param key the String key name
+  * @return the value as a byte array null if there is no value for the key.
+  */
+  public String getColumnAsString(String key) {
+    final byte[] val = getColumn(key);
+    return val == null ? null : Bytes.toString(val);
+  }
 }
