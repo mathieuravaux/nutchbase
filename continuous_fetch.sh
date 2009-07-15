@@ -1,8 +1,9 @@
 #!/bin/bash
 
-URLS_PER_ROUND=4000
+URLS_PER_ROUND=1000
 WEBTABLE=webtable
-NUTCH=./bin/nutch
+# NUTCH=./bin/nutch
+NUTCH=/root/nutch/bin/nutch
 
 i=1
 while [ 1 ]

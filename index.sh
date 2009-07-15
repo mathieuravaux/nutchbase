@@ -1,8 +1,9 @@
 #!/bin/bash
 
-NUTCH=./bin/nutch
+# NUTCH=./bin/nutch
+NUTCH=/root/nutch/bin/nutch
 WEBTABLE=webtable
-INDEX_PATH=/Users/Mathieu/Desktop/index
+INDEX_PATH=/root/index
 
 echo "Indexing data from '$WEBTABLE' to $INDEX_PATH..."
 if [[ -e $INDEX_PATH ]]; then
